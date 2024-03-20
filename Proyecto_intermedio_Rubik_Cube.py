@@ -2,15 +2,22 @@ import random
 
 class RubikCube:
     def __init__(self):
-        # 0 - up
-        # 1 - bottom
-        # 2 - right
-        # 3 - left
-        # 4 - front
-        # 5 - back
+        # Lista de listas para representar cada cara del cubo
+        self.cube = [
+            [[0 for _ in range(3)] for _ in range(3)],  # Cara superior
+            [[1 for _ in range(3)] for _ in range(3)],  # Cara inferior
+            [[2 for _ in range(3)] for _ in range(3)],  # Cara izquierda
+            [[3 for _ in range(3)] for _ in range(3)],  # Cara derecha
+            [[4 for _ in range(3)] for _ in range(3)],  # Cara frontal
+            [[5 for _ in range(3)] for _ in range(3)]   # Cara trasera
+        ]
 
-        self.cube = [[[i for i in range(6)] for j in range(3)] for k in range(3)]
-
+    def print_cube(self):
+        for cara in self.cube:
+            for fila in cara:
+                print(fila)
+            print()
+    
     def __xmove(self, n_row, n_moves):
         self.cube[n_row] = [self.cube[n_row][(i - n_moves) % 3] for i in range(3)]
 
@@ -33,7 +40,7 @@ class RubikCube:
     # Gira la fila inferior en sentido horario
     def move_xbottom(self, n_moves):
         self.__xmove(2, n_moves)
-    
+
     # Gira la columna izquierda en sentido horario
     def move_yleft(self, n_moves):
         self.__ymove(0, n_moves)
@@ -82,12 +89,17 @@ class RubikCube:
         pass
 
     def shuffle(self, n):
-        pass
+        movimientos_posibles = [self.move_xup, self.move_xmiddle, self.move_xbottom, self.move_yleft, self.move_ymiddle, self.move_yright, self.move_zfront, self.move_zmiddle, self.move_zback]
+
+        for _ in range(n):
+            movimiento_aleatorio = random.choice(movimientos_posibles)
+            movimiento_aleatorio(1)
 
     def solve(self):
         pass
 
-
-class CubeSolver:
-    def __init__(self):
-        self.cube = RubikCube()
+cubo = RubikCube()
+cubo.print_cube()
+cubo.shuffle(10)
+print("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+cubo.print_cube()
