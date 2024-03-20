@@ -2,15 +2,22 @@ import random
 
 class RubikCube:
     def __init__(self):
-        # 0 - up
-        # 1 - bottom
-        # 2 - right
-        # 3 - left
-        # 4 - front
-        # 5 - back
+        # Lista de listas para representar cada cara del cubo
+        self.cube = [
+            [[0 for _ in range(3)] for _ in range(3)],  # Cara superior
+            [[1 for _ in range(3)] for _ in range(3)],  # Cara inferior
+            [[2 for _ in range(3)] for _ in range(3)],  # Cara izquierda
+            [[3 for _ in range(3)] for _ in range(3)],  # Cara derecha
+            [[4 for _ in range(3)] for _ in range(3)],  # Cara frontal
+            [[5 for _ in range(3)] for _ in range(3)]   # Cara trasera
+        ]
 
-        self.cube = [[[i for i in range(6)] for j in range(3)] for k in range(3)]
-
+    def print_cube(self):
+        for cara in self.cube:
+            for fila in cara:
+                print(fila)
+            print()
+    
     def __xmove(self, n_row, n_moves):
         self.cube[n_row] = [self.cube[n_row][(i - n_moves) % 3] for i in range(3)]
 
@@ -33,7 +40,7 @@ class RubikCube:
     # Gira la fila inferior en sentido horario
     def move_xbottom(self, n_moves):
         self.__xmove(2, n_moves)
-    
+
     # Gira la columna izquierda en sentido horario
     def move_yleft(self, n_moves):
         self.__ymove(0, n_moves)
@@ -79,15 +86,36 @@ class RubikCube:
             self.move_zmiddle(1)
 
     def __count_colors(self):
-        pass
+        # Inicializa un diccionario para almacenar los conteos de colores
+        color_counts = {i: 0 for i in range(6)}
+        # Recorre cada cara del cubo
+        for face in self.cube:
+            # Recorre cada cuadrado en la cara
+            for row in face:
+                for color in row:
+                    # Incrementa el conteo para el color correspondiente
+                    color_counts[color] += 1
+                    
+        return color_counts
 
-    def shuffle(self, n):
-        pass
-
+    def shuffle(self, n_moves, make_moves=[]):
+        if len(make_moves) > 0:
+            for move in make_moves:
+                self.__move_cube(move)
+                colors = self.__count_colors()  # Almacena el resultado devuelto por __count_colors()
+                self.print_cube()
+        else: 
+            for i in range(n_moves):
+                move = random.randint(0, 8)
+                print(move)
+                self.__move_cube(move)
+                colors = self.__count_colors()
+                
     def solve(self):
         pass
 
-
-class CubeSolver:
-    def __init__(self):
-        self.cube = RubikCube()
+cubo = RubikCube()
+cubo.print_cube()
+cubo.shuffle(3,4)
+print("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+cubo.print_cube()
