@@ -63,6 +63,7 @@ class RubikCube:
             self.cube[5][2] = aux1  
             self.cube[4][2] = aux5  
             self.cube[0][2] = aux4
+        "---------------------------------------------------------------------------------------"
 
     # Gira la columna izquierda en sentido horario
     def move_yleft(self, n_moves):
@@ -97,10 +98,7 @@ class RubikCube:
                 self.cube[5][y][2] = aux2[y]  # de la cara 2 a la cara 5
                 self.cube[3][y][2] = aux5[y]  # de la cara 5 a la cara 3
                 self.cube[0][y][2] = aux3[y]  # de la cara 3 a la cara 0
-
-
-
-
+        "---------------------------------------------------------------------------------------"
     # Gira la cara frontal en sentido horario
     def move_zfront(self, n_moves): # AP
         for _ in range(n_moves):
@@ -117,14 +115,23 @@ class RubikCube:
                 self.cube[4][z][0] = aux5[z]  # de la cara 5 a la cara 3
                 self.cube[2][z][0] = aux3[z]  # de la cara 3 a la cara 0
 
-    # Gira la cara del medio en sentido horario
     def move_zmiddle(self, n_moves):
-        # Mandar llamar a las dos frontales 
-        pass
+        self.move_zback(n_moves)
+        self.move_zfront(n_moves)
 
     # Gira la cara trasera en sentido horario
     def move_zback(self, n_moves): # C
-        pass
+        for _ in range(n_moves):
+            aux0 = [self.cube[2][z][2] for z in range(3)] 
+            aux2 = [self.cube[1][z][2] for z in range(3)] 
+            aux5 = [self.cube[3][z][2] for z in range(3)] 
+            aux3 = [self.cube[4][z][2] for z in range(3)] 
+
+            for z in range(3):
+                self.cube[1][z][2] = aux0[z]  
+                self.cube[3][z][2] = aux2[z]  
+                self.cube[4][z][2] = aux5[z] 
+                self.cube[2][z][2] = aux3[z]  
 
     def __move_cube(self, move):
         if move == 0:
@@ -175,13 +182,7 @@ class RubikCube:
                 print(move)
                 self.__move_cube(move)
 
-    def solve(self):
-        pass
-
-
-
-
-    # PARALELOOOOOOOOOOOOOOO, METER HILOS
+   # PARALELOOOOOOOOOOOOOOO, METER HILOS
 
 cubo = RubikCube()
 cubo.print_cube()
