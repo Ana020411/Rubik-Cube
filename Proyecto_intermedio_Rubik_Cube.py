@@ -23,8 +23,18 @@ class RubikCube:
             for fila in cara:
                 print(fila)
             print()
-            
-            #BOTTOM DERECHA Y BACK
+
+
+    # "Y" HACIA ARRIBA
+    # 0 - 2 - 5 - 3
+
+    # "X" HACIA ARRIBA
+    # 0 - 1 - 5 - 4
+
+    # "Z" HACIA ARRIBA
+    # 2 - 1 - 3 - 4
+
+
     # Gira la fila superior en sentido horario
     def move_xup(self, n_moves):#AP
         for _ in range(n_moves):
@@ -52,28 +62,58 @@ class RubikCube:
             self.cube[1][2] = aux0  
             self.cube[5][2] = aux1  
             self.cube[4][2] = aux5  
-            self.cube[0][2] = aux4  
+            self.cube[0][2] = aux4
 
-                
     # Gira la columna izquierda en sentido horario
     def move_yleft(self, n_moves):
+        for _ in range(n_moves):
+            # Guardar los valores de las posiciones que se moverán en la columna derecha
+            aux0 = [self.cube[0][y][0] for y in range(3)] 
+            aux2 = [self.cube[2][y][0] for y in range(3)] 
+            aux5 = [self.cube[5][y][0] for y in range(3)] 
+            aux3 = [self.cube[3][y][0] for y in range(3)] 
+
+            # Mover las posiciones en la columna derecha según el orden 0 - 2 - 5 - 3
+            for y in range(3):
+                self.cube[2][y][0] = aux0[y]  # de la cara 0 a la cara 2
+                self.cube[5][y][0] = aux2[y]  # de la cara 2 a la cara 5
+                self.cube[3][y][0] = aux5[y]  # de la cara 5 a la cara 3
+                self.cube[0][y][0] = aux3[y]  # de la cara 3 a la cara 0
+
+    def move_ymiddle(self, n_moves):
+        self.move_yleft(n_moves)
+        self.move_yright(n_moves)
+
+    def move_yright(self, n_moves):
+        for _ in range(n_moves):
+            aux0 = [self.cube[0][y][2] for y in range(3)]  
+            aux2 = [self.cube[2][y][2] for y in range(3)]  
+            aux5 = [self.cube[5][y][2] for y in range(3)] 
+            aux3 = [self.cube[3][y][2] for y in range(3)] 
+
+            # Mover las posiciones en la columna derecha según el orden 0 - 2 - 5 - 3
+            for y in range(3):
+                self.cube[2][y][2] = aux0[y]  # de la cara 0 a la cara 2
+                self.cube[5][y][2] = aux2[y]  # de la cara 2 a la cara 5
+                self.cube[3][y][2] = aux5[y]  # de la cara 5 a la cara 3
+                self.cube[0][y][2] = aux3[y]  # de la cara 3 a la cara 0
+
+
+
+
+    # Gira la cara frontal en sentido horario
+    def move_zfront(self, n_moves): # AP
+        #Accede a la row[0] de la cara 2
         pass
 
-    # Gira la columna central en sentido horario
-    def move_ymiddle(self, n_moves):#AP
-        pass
-    # Gira la columna derecha en sentido horario
-    def move_yright(self, n_moves):
-        pass
-    # Gira la cara frontal en sentido horario
-    def move_zfront(self, n_moves):#AP
-        pass
     # Gira la cara del medio en sentido horario
     def move_zmiddle(self, n_moves):
+        # Mandar llamar a las dos frontales 
         pass
+
     # Gira la cara trasera en sentido horario
-    def move_zback(self, n_moves):#YO
-        pass        #ACCEDER A LA 0 DE LA 5 
+    def move_zback(self, n_moves): # C
+        pass
 
     def __move_cube(self, move):
         if move == 0:
@@ -81,7 +121,7 @@ class RubikCube:
         elif move == 1:
             self.move_xbottom(1)
         elif move == 2:
-            self.move_xmiddle(3)
+            self.move_xmiddle(1)
         elif move == 3:
             self.move_yleft(1)
         elif move == 4:
@@ -99,7 +139,7 @@ class RubikCube:
         elif move == 10:
             self.move_xbottom(3)
         elif move == 11:
-            self.move_xmiddle(1)
+            self.move_xmiddle(3)
         elif move == 12:
             self.move_yleft(3)
         elif move == 13:
@@ -120,17 +160,20 @@ class RubikCube:
                 self.print_cube()
         else: 
             for i in range(n_moves):
-                move = random.randint(0, 17) #varia el 11
+                move = random.randint(3, 5) #varia el 17
                 print(move)
                 self.__move_cube(move)
 
     def solve(self):
         pass
 
+
+
+
+    # PARALELOOOOOOOOOOOOOOO, METER HILOS
+
 cubo = RubikCube()
 cubo.print_cube()
-print("-----------------------------------------------")
-
-cubo.move_xbottom(1)
-cubo.move_xup(1)
+cubo.shuffle(2)
+print("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
 cubo.print_cube()
