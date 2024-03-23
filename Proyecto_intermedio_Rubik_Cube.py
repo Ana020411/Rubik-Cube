@@ -103,8 +103,19 @@ class RubikCube:
 
     # Gira la cara frontal en sentido horario
     def move_zfront(self, n_moves): # AP
-        #Accede a la row[0] de la cara 2
-        pass
+        for _ in range(n_moves):
+            # Guardar los valores de las posiciones que se moverán en la columna derecha
+            aux0 = [self.cube[2][z][0] for z in range(3)] 
+            aux2 = [self.cube[1][z][0] for z in range(3)] 
+            aux5 = [self.cube[3][z][0] for z in range(3)] 
+            aux3 = [self.cube[4][z][0] for z in range(3)] 
+
+            # Mover las posiciones en la columna derecha según el orden 0 - 2 - 5 - 3
+            for z in range(3):
+                self.cube[1][z][0] = aux0[z]  # de la cara 2 a la cara 2
+                self.cube[3][z][0] = aux2[z]  # de la cara 2 a la cara 5
+                self.cube[4][z][0] = aux5[z]  # de la cara 5 a la cara 3
+                self.cube[2][z][0] = aux3[z]  # de la cara 3 a la cara 0
 
     # Gira la cara del medio en sentido horario
     def move_zmiddle(self, n_moves):
@@ -160,7 +171,7 @@ class RubikCube:
                 self.print_cube()
         else: 
             for i in range(n_moves):
-                move = random.randint(3, 5) #varia el 17
+                move = random.randint(6, 7) #varia el 17
                 print(move)
                 self.__move_cube(move)
 
@@ -174,6 +185,6 @@ class RubikCube:
 
 cubo = RubikCube()
 cubo.print_cube()
-cubo.shuffle(2)
+cubo.shuffle(1)
 print("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
 cubo.print_cube()
