@@ -1,0 +1,2 @@
+    def rotate_face_counterclockwise(self, face):
+        self.cube[face] = np.rot90(self.cube[face])
