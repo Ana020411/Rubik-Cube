@@ -15,16 +15,19 @@ class RubikCube:
             
         ]
         
-        print(len(self.cube))
+    '''print(len(self.cube))
         print(len(self.cube[0]))
-        print(len(self.cube[0][0]))
+        print(len(self.cube[0][0]))'''
         #6 en y, 3 en x y z       
 
     def print_cube(self):
-        for cara in self.cube:
-            for fila in cara:
-                print(fila)
-            print()
+        for i in range(len(self.cube[0])):
+            for cara in self.cube:
+                for elem in cara[i]:
+                    print(elem, end=' ')
+                print('  ', end='') 
+            print()  
+
 
 
     # "Y" HACIA ARRIBA
@@ -177,11 +180,10 @@ class RubikCube:
         if len(make_moves) > 0:
             for move in make_moves:
                 self.__move_cube(move)
-                self.print_cube()
+                
         else: 
             for i in range(n_moves):
                 move = random.randint(0, 17) #varia el 17
-                print(move)
                 self.__move_cube(move)
 
    # PARALELOOOOOOOOOOOOOOO, METER HILO
@@ -203,23 +205,26 @@ class RubikSolver(RubikCube):
     def new_method(self, cube):
         pass
 
-
-
-#SHUFFLE AL AZAR
-
 cubo = RubikSolver()
+
+print("\n*******Movimientos que puedes hacer*******\n")
+print("Mover fila superior a la derecha(0) o izquierda(9)\nMover fila intermedia a la derecha(2) o izquierda(11)")
+print("Mover fila inferior a la derecha(1) o izquierda(10)")
+print("Mover columna izquierda hacia arriba(3) o hacia abajo(12)\nMover columna intermedia hacia arriba(4) o hacia bajo(13)")
+print("Mover columna derecha hacia arriba(5) o hacia abajo(14)")
+print("Mover cara frontal a la derecha(7) o izquierda(16)\nMover cara intermedia a la derecha(8) o izquierda(17)")
+print("Mover cara trasera a la derecha(6) o izquierda(15)")
+print("***********************************************************\n")
+print("Cubo original:")
 cubo.print_cube()
+print("---------------------------------------------------------")
+print("\nCubo revuelto al azar:")
 cubo.shuffle(1)
+cubo.print_cube()
 print("---------------------------------------------------------")
+print("\nCubo revuelto manualmente:")
+movimientos_manual = [5]
+cubo.shuffle( 1, movimientos_manual)
 cubo.print_cube()
-
-
-#SHUFFLE MANUAL
-'''
-cubo = RubikCube()
-cubo.print_cube()
-movimientos_manual = [0, 1, 2, 3, 4, 5] 
 print("---------------------------------------------------------")
-cubo.shuffle(1, movimientos_manual)
-cubo.print_cube()
-'''
+
