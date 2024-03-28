@@ -1,15 +1,17 @@
 import random
+from collections import defaultdict
+from queue import Queue
 
 class RubikCube:
     def __init__(self):
         # Lista de listas para representar cada cara del cubo
         self.cube = [
-            [[0 for _ in range(3)] for _ in range(3)],  # Cara Frente
-            [[1 for _ in range(3)] for _ in range(3)],  # Cara derecha
-            [[2 for _ in range(3)] for _ in range(3)],  # Cara superior
-            [[3 for _ in range(3)] for _ in range(3)],  # Cara inferior
-            [[4 for _ in range(3)] for _ in range(3)],  # Cara izquierda
-            [[5 for _ in range(3)] for _ in range(3)]   # Cara trasera
+            [[0 for _ in range(3)] for _ in range(3)],  # 0 - Cara Frente - BLANCO
+            [[1 for _ in range(3)] for _ in range(3)],  # 1 - Cara derecha - ROJO
+            [[2 for _ in range(3)] for _ in range(3)],  # 2 - Cara superior - AZUL
+            [[3 for _ in range(3)] for _ in range(3)],  # 3 - Cara inferior - VERDE
+            [[4 for _ in range(3)] for _ in range(3)],  # 4 - Cara izquierda - NARANJA
+            [[5 for _ in range(3)] for _ in range(3)]   # 5 - Cara trasera - AMARILLO
             
         ]
         
@@ -178,14 +180,46 @@ class RubikCube:
                 self.print_cube()
         else: 
             for i in range(n_moves):
-                move = random.randint(6, 7) #varia el 17
+                move = random.randint(0, 17) #varia el 17
                 print(move)
                 self.__move_cube(move)
 
-   # PARALELOOOOOOOOOOOOOOO, METER HILOS
+   # PARALELOOOOOOOOOOOOOOO, METER HILO
+                
+class RubikSolver(RubikCube):
+    def __init__(self):
+        super().__init__()
 
-cubo = RubikCube()
+
+    def breath_first_search(self, cube):
+        pass
+
+    def best_first_search(self, cube):
+        pass
+
+    def a_star(self, cube):
+        pass
+
+    def new_method(self, cube):
+        pass
+
+
+
+#SHUFFLE AL AZAR
+
+cubo = RubikSolver()
 cubo.print_cube()
 cubo.shuffle(1)
-print("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+print("---------------------------------------------------------")
 cubo.print_cube()
+
+
+#SHUFFLE MANUAL
+'''
+cubo = RubikCube()
+cubo.print_cube()
+movimientos_manual = [0, 1, 2, 3, 4, 5] 
+print("---------------------------------------------------------")
+cubo.shuffle(1, movimientos_manual)
+cubo.print_cube()
+'''
