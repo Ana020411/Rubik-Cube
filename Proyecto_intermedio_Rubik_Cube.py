@@ -1,6 +1,7 @@
 import random
 from collections import defaultdict
 from queue import Queue
+import copy
 
 class RubikCube:
     def __init__(self):
@@ -185,28 +186,128 @@ class RubikCube:
             for i in range(n_moves):
                 move = random.randint(0, 17) #varia el 17
                 self.__move_cube(move)
+        return self
 
    # PARALELOOOOOOOOOOOOOOO, METER HILO
-                
+
+
+# -------------------------------------------- CLASE SOLVER -------------------------------------------------------#                  
 class RubikSolver(RubikCube):
     def __init__(self):
         super().__init__()
 
+    # Herencia de la funcion __move_cube
+    def apply_move(self,move):
+        if move == 0:
+            super().move_xup(1)
+        elif move == 1:
+            super().move_xbottom(1)
+        elif move == 2:
+            super().move_xmiddle(1)
+        elif move == 3:
+            super().move_yleft(1)
+        elif move == 4:
+            super().move_ymiddle(1)
+        elif move == 5:
+            super().move_yright(1)
+        elif move == 6:
+            super().move_zback(1)
+        elif move == 7:
+            super().move_zfront(1)
+        elif move == 8:
+            super().move_zmiddle(1)
+        elif move == 9:
+            super().move_xup(3)
+        elif move == 10:
+            super().move_xbottom(3)
+        elif move == 11:
+            super().move_xmiddle(3)
+        elif move == 12:
+            super().move_yleft(3)
+        elif move == 13:
+            super().move_ymiddle(3)
+        elif move == 14:
+            super().move_yright(3)
+        elif move == 15:
+            super().move_zback(3)
+        elif move == 16:
+            super().move_zfront(3)
+        elif move == 17:
+            super().move_zmiddle(3)
 
-    def breath_first_search(self, cube):
+
+    # 54 arreglo de 6 bits para optimizar
+    def encode(self, cube):
+        # Representación binaria de cada color: blanco-rojo-azul-verde-naranja-amarillo
+        # 100000 - 010000 - 001000 - 000100 - 000010 - 000001
+            encoded_state = []
+            aux = [] 
+            count = 0
+            for face in cube:
+                for row in face:
+                    for elem in row:
+                        if elem == 0:  # Blanco
+                            encoded_state.append([1, 0, 0, 0, 0, 0])
+                        elif elem == 1:  # Rojo
+                            encoded_state.append([0, 1, 0, 0, 0, 0])
+                        elif elem == 2:  # Azul
+                            encoded_state.append([0, 0, 1, 0, 0, 0])
+                        elif elem == 3:  # Verde
+                            encoded_state.append([0, 0, 0, 1, 0, 0])
+                        elif elem == 4:  # Naranja
+                            encoded_state.append([0, 0, 0, 0, 1, 0])
+                        else:  # Amarillo
+                            encoded_state.append([0, 0, 0, 0, 0, 1])
+                        '''
+                        count += 1
+                        if count % 9 == 0:  
+                            encoded_state.append(aux)
+                            aux = [] 
+                        '''
+            return encoded_state
+    
+
+    #------------------------------------------------------------ BFS (Breadth-First-Search)--------------------------------------------------------# 
+    def breadth_first_search(self, shuffled_state, solved_state):
+            visited = set()
+            queue = [(shuffled_state, [])]
+
+            while queue:
+                state, path = queue.pop(0)
+                if self.encode(state.cube) == self.encode(solved_state.cube):
+                    return len(path), path
+
+                encoded_state = self.encode(state.cube)
+                visited.add(tuple(map(tuple, encoded_state)))
+
+                for move in range(18):
+                    new_state = copy.deepcopy(state)
+                    new_state.apply_move(move)
+
+                    encoded_new_state = self.encode(new_state.cube)
+                    if tuple(map(tuple, encoded_new_state)) not in visited:
+                        queue.append((new_state, path + [move]))
+
+            return None
+    
+    #------------------------------------------------------------  BFS (Best-First-Search) --------------------------------------------------------# 
+    def a_star(self, cube):
         pass
 
-    def best_first_search(self, cube):
-        pass
 
+    #------------------------------------------------------------  A* --------------------------------------------------------# 
     def a_star(self, cube):
         pass
 
     def new_method(self, cube):
         pass
 
-cubo = RubikSolver()
 
+
+
+# ----------------------------CASO RPUEBA----------------------------------------#
+    
+cubo = RubikSolver()
 print("\n*******Movimientos que puedes hacer*******\n")
 print("Mover fila superior a la derecha(0) o izquierda(9)\nMover fila intermedia a la derecha(2) o izquierda(11)")
 print("Mover fila inferior a la derecha(1) o izquierda(10)")
@@ -228,3 +329,13 @@ cubo.shuffle( 1, movimientos_manual)
 cubo.print_cube()
 print("---------------------------------------------------------")
 
+cubo = RubikSolver()
+cubo_resuelto = RubikSolver()  # Se inicializa un nuevo cubo resuelto
+shuffled_state = cubo.shuffle(1)  # Se obtiene el estado del cubo revuelto después del shuffle
+print("\nCubo a resolver revuelto al azar:")
+cubo.print_cube()
+
+print("Cantidad de movimientos y lista de movimientos para resolver el cubo:")
+movimientos_necesarios, movimientos = cubo.breadth_first_search(shuffled_state, cubo_resuelto)
+print("Cantidad de movimientos necesarios:", movimientos_necesarios)
+print("Lista de movimientos:", movimientos)
