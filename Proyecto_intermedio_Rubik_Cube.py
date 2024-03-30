@@ -29,8 +29,6 @@ class RubikCube:
                 print('  ', end='') 
             print()  
 
-
-
     # "Y" HACIA ARRIBA
     # 0 - 2 - 5 - 3
 
@@ -189,8 +187,37 @@ class RubikCube:
         return self
 
    # PARALELOOOOOOOOOOOOOOO, METER HILO
+#----------------------------------------------------CLASE HEURISTICA---------------------------------------
+class Heuristica:
+    @staticmethod
+    def bfs(node_a, node_b):
+        return 0 #por lo pronto
+    
+#-----------------------------------------------------CLASE NODO---------------------------------------
+class Node:
+    def __init__(self, state, anterior=None, movimiento=None):
+        self.state = state
+        self.anterior = anterior#estado anterior
+        self.movimiento = movimiento
+        self.heuristic_value = -1
 
+    def calculate_heuristic(self, other, heuristic):
+        self.heuristic_value = heuristic(self, other)
 
+    def __eq__(self, other):
+        if not isinstance(other, Node):
+            return False
+        return self.state == other.state
+
+    def __lt__(self, other):
+        if not isinstance(other, Node):
+            return False
+        return self.heuristic_value < other.heuristic_value
+
+    def __gt__(self, other):
+        if not isinstance(other, Node):
+            return False
+        return self.heuristic_value > other.heuristic_value
 # -------------------------------------------- CLASE SOLVER -------------------------------------------------------#                  
 class RubikSolver(RubikCube):
     def __init__(self):
@@ -235,7 +262,6 @@ class RubikSolver(RubikCube):
         elif move == 17:
             super().move_zmiddle(3)
 
-
     # 54 arreglo de 6 bits para optimizar
     def encode(self, cube):
         # Representación binaria de cada color: blanco-rojo-azul-verde-naranja-amarillo
@@ -268,9 +294,9 @@ class RubikSolver(RubikCube):
     
 
     #------------------------------------------------------------ BFS (Breadth-First-Search)--------------------------------------------------------# 
-    def breadth_first_search(self, shuffled_state, solved_state):
+    def breadth_first_search(self, initial_state, solved_state):
             visited = set()
-            queue = [(shuffled_state, [])]
+            queue = [(initial_state, [])]
 
             while queue:
                 state, path = queue.pop(0)
@@ -291,7 +317,7 @@ class RubikSolver(RubikCube):
             return None
     
     #------------------------------------------------------------  BFS (Best-First-Search) --------------------------------------------------------# 
-    def a_star(self, cube):
+    def best_first_search(self, cube):
         pass
 
 
@@ -339,3 +365,4 @@ print("Cantidad de movimientos y lista de movimientos para resolver el cubo:")
 movimientos_necesarios, movimientos = cubo.breadth_first_search(shuffled_state, cubo_resuelto)
 print("Cantidad de movimientos necesarios:", movimientos_necesarios)
 print("Lista de movimientos:", movimientos)
+cubo.print_cube()
