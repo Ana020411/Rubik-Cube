@@ -1,5 +1,5 @@
 import random
-from collections import defaultdict
+from collections import deque
 from queue import Queue
 import copy
 
@@ -191,15 +191,34 @@ class RubikCube:
 class Heuristica:
     @staticmethod
     def bfs(node_a, node_b):
-        return 0 #por lo pronto
+        cubo_uno = node_a.state.cube
+        cubo_dos = node_b.state.cube
+        distancia = 0
+
+        for face in range(6):
+            for row in range(3):
+                for col in range(3):
+                    valor_cubouno = cubo_uno[face][row][col]
+                    face_target, row_target, col_target = -1, -1, -1
+                    for c in range(6):
+                        for f in range(3):
+                            for col in range(3):
+                                if cubo_dos[c][f][col] == valor_cubouno:
+                                    face_target, row_target, col_target = c, f, col
+                                    break
+                        if face_target != -1:
+                            break
+                    distancia += abs(face - face_target) + abs(row - row_target) + abs(col - col_target)#CHECAAAAAAAR SI ACUMULAMOS LAS DISTANCIAS O NO*****
+
+        return distancia
     
 #-----------------------------------------------------CLASE NODO---------------------------------------
 class Node:
-    def __init__(self, state, anterior=None, movimiento=None):
+    def __init__(self, state,  path=None):
         self.state = state
-        self.anterior = anterior#estado anterior
-        self.movimiento = movimiento
         self.heuristic_value = -1
+        self.path = []
+        self.path = [] if path is None else path
 
     def calculate_heuristic(self, other, heuristic):
         self.heuristic_value = heuristic(self, other)
@@ -317,8 +336,31 @@ class RubikSolver(RubikCube):
             return None
     
     #------------------------------------------------------------  BFS (Best-First-Search) --------------------------------------------------------# 
-    def best_first_search(self, cube):
-        pass
+    def best_first_search(self, initial_state, solved_state, heuristic):
+        visited = set()
+        queue = deque()
+        source = Node(initial_state, path=[])
+        target = Node(solved_state)
+        source.calculate_heuristic(target, heuristic)
+        queue.append(source)
+        while queue:
+            current_node = queue.popleft()
+            encoded_state = tuple(map(tuple, self.encode(current_node.state.cube)))
+
+            if encoded_state == tuple(map(tuple, self.encode(solved_state.cube))):
+                return len(current_node.path), current_node.path
+            visited.add(encoded_state)
+
+            for move in range(18):  # Hay 18 movimientos posibles en un cubo de Rubik
+                new_state = copy.deepcopy(current_node.state)
+                new_state.apply_move(move)
+                encoded_new_state = tuple(map(tuple, self.encode(new_state.cube)))
+                if encoded_new_state not in visited:
+                    new_node = Node(new_state, path=current_node.path + [move])
+                    new_node.calculate_heuristic(target, heuristic)
+                    queue.append(new_node)
+
+        return None
 
 
     #------------------------------------------------------------  A* --------------------------------------------------------# 
@@ -334,6 +376,7 @@ class RubikSolver(RubikCube):
 # ----------------------------CASO RPUEBA----------------------------------------#
     
 cubo = RubikSolver()
+'''
 print("\n*******Movimientos que puedes hacer*******\n")
 print("Mover fila superior a la derecha(0) o izquierda(9)\nMover fila intermedia a la derecha(2) o izquierda(11)")
 print("Mover fila inferior a la derecha(1) o izquierda(10)")
@@ -359,10 +402,18 @@ cubo = RubikSolver()
 cubo_resuelto = RubikSolver()  # Se inicializa un nuevo cubo resuelto
 shuffled_state = cubo.shuffle(1)  # Se obtiene el estado del cubo revuelto después del shuffle
 print("\nCubo a resolver revuelto al azar:")
-cubo.print_cube()
+cubo.print_cube()'''
 
+'''print("----------breathtfs-----------------")
 print("Cantidad de movimientos y lista de movimientos para resolver el cubo:")
 movimientos_necesarios, movimientos = cubo.breadth_first_search(shuffled_state, cubo_resuelto)
 print("Cantidad de movimientos necesarios:", movimientos_necesarios)
 print("Lista de movimientos:", movimientos)
+cubo.print_cube()'''
+print("----------bestfs-----------------")
+solved_state = RubikSolver()  
+initial_state = cubo.shuffle(1)  # Se obtiene el estado del cubo revuelto después del shuffle
 cubo.print_cube()
+movimientos_necesarios, movimientos = cubo.best_first_search(initial_state, solved_state, Heuristica.bfs)
+print("Cantidad de movimientos necesarios:", movimientos_necesarios)
+print("Lista de movimientos:", movimientos)
