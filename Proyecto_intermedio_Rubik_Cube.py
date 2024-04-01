@@ -388,8 +388,33 @@ class RubikSolver(RubikCube):
 
     #------------------------------------------------------------  A* --------------------------------------------------------# 
     def a_star(self, initial_state, solved_state, heuristic):
-        pass
+        visited = set()
+        pq = PriorityQueue()
+        source = NodeAStar(initial_state, path=[])
+        target = NodeAStar(solved_state)
+        source.calculate_heuristic(target, heuristic)
+        pq.put((source.heuristic_value, source))
 
+        while not pq.empty():
+            _, current_node = pq.get()
+            encoded_state = tuple(map(tuple, self.encode(current_node.state.cube)))
+
+            if encoded_state == tuple(map(tuple, self.encode(solved_state.cube))):
+                return len(current_node.path), current_node.path
+
+            visited.add(encoded_state)
+
+            for move in range(18):  # Hay 18 movimientos posibles en un cubo de Rubik
+                new_state = copy.deepcopy(current_node.state)
+                new_state.apply_move(move)
+                encoded_new_state = tuple(map(tuple, self.encode(new_state.cube)))
+                if encoded_new_state not in visited:
+                    new_node = NodeAStar(new_state, path=current_node.path + [move])
+                    new_node.distance = current_node.distance + 1
+                    new_node.calculate_heuristic(target, heuristic)
+                    pq.put((new_node.heuristic_value + new_node.distance, new_node))
+
+        return None
 
 
 
@@ -404,11 +429,11 @@ class RubikSolver(RubikCube):
 cubo = RubikSolver()
 '''
 print("\n*******Movimientos que puedes hacer*******\n")
-print("Mover fila superior a la derecha(0) o izquierda(9)\nMover fila intermedia a la derecha(2) o izquierda(11)")
+print("Mover fila superior a la derecha(9) o izquierda(0)\nMover fila intermedia a la derecha(11) o izquierda(2)")
 print("Mover fila inferior a la derecha(1) o izquierda(10)")
 print("Mover columna izquierda hacia arriba(3) o hacia abajo(12)\nMover columna intermedia hacia arriba(4) o hacia bajo(13)")
 print("Mover columna derecha hacia arriba(5) o hacia abajo(14)")
-print("Mover cara frontal a la derecha(7) o izquierda(16)\nMover cara intermedia a la derecha(8) o izquierda(17)")
+print("Mover cara frontal a la derecha(7) o izquierda(16)\nMover cara intermedia a la derecha(17) o izquierda(8)")
 print("Mover cara trasera a la derecha(6) o izquierda(15)")
 print("***********************************************************\n")
 print("Cubo original:")
@@ -436,10 +461,20 @@ movimientos_necesarios, movimientos = cubo.breadth_first_search(shuffled_state, 
 print("Cantidad de movimientos necesarios:", movimientos_necesarios)
 print("Lista de movimientos:", movimientos)
 cubo.print_cube()'''
-print("----------bestfs-----------------")
+
+'''print("----------bestfs-----------------")
 solved_state = RubikSolver()  
-initial_state = cubo.shuffle(2)  # Se obtiene el estado del cubo revuelto después del shuffle
+initial_state = cubo.shuffle(4)  # Se obtiene el estado del cubo revuelto después del shuffle
 cubo.print_cube()
 movimientos_necesarios, movimientos = cubo.best_first_search(initial_state, solved_state, Heuristica.bfs)
+print("Cantidad de movimientos necesarios:", movimientos_necesarios)
+print("Lista de movimientos:", movimientos)'''
+
+print("----------A*-----------------")
+solved_state = RubikSolver()  
+movimientos_manual = [5, 11]
+initial_state = cubo.shuffle(1, movimientos_manual)  # Se obtiene el estado del cubo revuelto después del shuffle
+cubo.print_cube()
+movimientos_necesarios, movimientos = cubo.a_star(initial_state, solved_state, Heuristica.bfs)
 print("Cantidad de movimientos necesarios:", movimientos_necesarios)
 print("Lista de movimientos:", movimientos)
