@@ -230,8 +230,39 @@ class Heuristica:
         return distancia
     
     @staticmethod
-    def heuristic2(node_a, node_b):
-        pass
+    def heuristic0(node_a, node_b):
+        return 0
+    
+    @staticmethod
+    def esquinas(node_a, node_b):
+        cube_uno = node_a.state.cube
+        cube_dos = node_b.state.cube
+        misplaced_edges = 0
+
+        # Va checando las esquinas que no están bien
+        edges = [(0, 1), (1, 0), (1, 2), (2, 1)]
+        for face in range(6):
+            for edge in edges:
+                row, col = edge
+                if cube_uno[face][row][col] != cube_dos[face][row][col]:
+                    misplaced_edges += 1
+
+        return misplaced_edges
+            
+    @staticmethod
+    def color_centro(node_a, node_b):
+        state = node_a.state.cube
+        target_state = node_b.state.cube
+        distancia = 0
+
+        for face in range(6):
+            color_centro = state[face][1][1]  
+            target_color_centro = target_state[face][1][1] 
+            if color_centro != target_color_centro:
+                distancia += 1
+
+        return distancia
+
     
 #-----------------------------------------------------CLASE NODO---------------------------------------
 class Node:
