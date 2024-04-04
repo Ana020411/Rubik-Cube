@@ -464,7 +464,27 @@ class RubikSolver(RubikCube):
                     pq.put((new_node.heuristic_value + new_node.distance, new_node))
 
         return None
+ #-----------------------------NUEVO----------------------------------------------------------------
     
+    def iterative_deepening_depth_first_search(self, max_depth, solved_state):
+        for depth in range(1, max_depth + 1):
+            result = self.depth_limited_search(depth, solved_state, [])
+            if result is not None:
+                return result
+        return None
+
+    def depth_limited_search(self, depth_limit, solved_state, path):
+        if depth_limit == 0:
+            return None
+        if self.cube == solved_state.cube:  
+            return path
+        for move in range(18):
+            new_cube = copy.deepcopy(self)  
+            new_cube.apply_move(move)
+            result = new_cube.depth_limited_search(depth_limit - 1, solved_state, path + [move])
+            if result is not None:
+                return result
+        return None
     
 # ----------------------------CASO RPUEBA----------------------------------------#
     

@@ -296,8 +296,8 @@ class RubikSolver(RubikCube):
 
 rubik = RubikSolver()
 goal_state = RubikSolver()  # Este sería el estado objetivo
-rubik.shuffle(0,[10])  # Mezclar el cubo
+rubik.shuffle(5)  # Mezclar el cubo
 rubik.print_cube()
 
-'''solution = rubik.iterative_deepening_depth_first_search(5, goal_state)
-print("Solución encontrada:", solution)'''
+solution = rubik.iterative_deepening_depth_first_search(5, goal_state)
+print("Solución encontrada:", solution)
