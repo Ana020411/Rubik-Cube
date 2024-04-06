@@ -3,33 +3,38 @@ from collections import deque
 from queue import Queue
 import copy
 from queue import PriorityQueue
+import numpy as np
 
 class RubikCube:
     def __init__(self):
-        # Lista de listas para representar cada cara del cubo
-        self.cube = [
-            [[0 for _ in range(3)] for _ in range(3)],  # 0 - Cara Frente - BLANCO
-            [[1 for _ in range(3)] for _ in range(3)],  # 1 - Cara derecha - ROJO
-            [[2 for _ in range(3)] for _ in range(3)],  # 2 - Cara superior - AZUL
-            [[3 for _ in range(3)] for _ in range(3)],  # 3 - Cara inferior - VERDE
-            [[4 for _ in range(3)] for _ in range(3)],  # 4 - Cara izquierda - NARANJA
-            [[5 for _ in range(3)] for _ in range(3)]   # 5 - Cara trasera - AMARILLO
-            
-        ]
+        # 0 - Cara Frente - BLANCO
+        # 4 - Cara derecha - ROJO
+        # 1 - Cara superior - AZUL
+        # 2 - Cara inferior - VERDE
+        # 3 - Cara izquierda - NARANJA
+        # 5 - Cara trasera - AMARILLO
+
+        self.cube = [0,0,0,0,0,0]
+
+        # 000 - white
+        # 001 - blue
+        # 010 - green
+        # 011 - orange
+        # 100 - red
+        # 101 - yellow
         
-    '''print(len(self.cube))
-        print(len(self.cube[0]))
-        print(len(self.cube[0][0]))'''
-        #6 en y, 3 en x y z       
+        self.colors = [0,1,2,3,4,5]
 
-    def print_cube(self):
-        for i in range(len(self.cube[0])):
-            for cara in self.cube:
-                for elem in cara[i]:
-                    print(elem, end=' ')
-                print('  ', end='') 
-            print()  
-
+        self.rotation = [[(18, 20), (9, 11), (0,2)],
+                         [(21, 23), (12, 14), (3, 5)],
+                         [(24, 26), (15, 17), (6, 8)]]
+        
+        #Inicializa el cubo
+        for i in range(len(self.cube)):
+            self.cube[i] = self.colors[i]
+            for _ in range(8):
+                self.cube[i] = (self.cube[i]<<3) | self.colors[i]
+        
     # "Y" HACIA ARRIBA
     # 0 - 2 - 5 - 3
 
@@ -39,120 +44,86 @@ class RubikCube:
     # "Z" HACIA ARRIBA
     # 2 - 1 - 3 - 4
 
-    def rotate_clockwise(self, face_index):
-        face = self.cube[face_index]
-        rotated_face = [[0 for _ in range(3)] for _ in range(3)]
-        
-        for i in range(3):
-            for j in range(3):
-                rotated_face[j][2-i] = face[i][j]
-        
-        self.cube[face_index] = rotated_face
+    def rotate(self, n):
+        for i in range(2, 0):
+            for j in range(2, 0):
+                mask = (mask << 3) | self.__get_bits(n, self.rotation[i][j][0], self.rotation[i][j][1]) # n = la cara que se quiere rotar
 
-        # Gira la fila superior en sentido horario
-    def move_xup(self, n_moves):#AP
-        for _ in range(n_moves):
-            aux0 = self.cube[0][0].copy()  
-            aux1 = self.cube[1][0].copy()  
-            aux5 = self.cube[5][0].copy()  
-            aux4 = self.cube[4][0].copy()  
+        #antihorario - arriba a abajo, izquierda derecha
+        #horario - derecha a izquierda, abajo a arriba
+        
+        return mask
 
-            self.cube[1][0] = aux0  
-            self.cube[5][0] = aux1  
-            self.cube[4][0] = aux5  
-            self.cube[0][0] = aux4  
-        self.rotate_clockwise(2)
-            
+    def __get_bits(self, n, lb, gb): # El número y el rango 
+        if lb > gb or gb < lb:
+            return 0
+        
+        mask = ( (2 ** (gb + 1) - 1) >> lb) << lb 
+
+        return (n & mask) >> lb # Se regresa el número en bits
+    
+
+    def __set_bits(self, n, bits, lb, gb, max_bits = 26): # En el número donde le voy a meter los bits de donde a donde y el máximo de bits
+        mask1 = self.__get_bits(n, gb +1, max_bits) # Antes de donde van los bits
+        mask2 = bits # Los bits que se ponen el lugar donde se ponen
+        mask3 = self.__get_bits(n, 0, lb - 1) # Los bits desde el lb hasta 0
+        num = ((mask1 << (gb - lb + 1) | mask2) << lb) | mask3 # | (or) mete los bits, se van corriendo los bits para que quepan
+
+        return num
+    
+
+    def move_xup(self, n_moves):
+        front = self.__get_bits(self.cube[0], 0, 8)
+        right = self.__get_bits(self.cube[4], 0, 8)
+        back = self.__get_bits(self.cube[5], 0, 8)
+        left = self.__get_bits(self.cube[3], 0, 8)
+
+        self.cube[0] = self.__set_bits(self.cube[0], left, 0, 8)
+        self.cube[4] = self.__set_bits(self.cube[4], front, 0, 8)
+        self.cube[5] = self.__set_bits(self.cube[5], right, 0, 8)
+        self.cube[3] = self.__set_bits(self.cube[3], back, 0, 8)
+    
     def move_xmiddle(self, n_moves):#C
-        self.move_xbottom(n_moves)
-        self.move_xup(n_moves)
+        front = self.__get_bits(self.cube[0], 18, 26)
+        right = self.__get_bits(self.cube[4], 18, 26)
+        back = self.__get_bits(self.cube[5], 18, 26)
+        left = self.__get_bits(self.cube[3], 18, 26)
+
+        self.cube[0] = self.__set_bits(self.cube[0], left, 18, 26)
+        self.cube[4] = self.__set_bits(self.cube[4], front, 18, 26)
+        self.cube[5] = self.__set_bits(self.cube[5], right, 18, 26)
+        self.cube[3] = self.__set_bits(self.cube[3], back, 18, 26)
         
     def move_xbottom(self, n_moves):#AP
-        for _ in range(n_moves):
-            aux0 = self.cube[0][2].copy()  
-            aux1 = self.cube[1][2].copy()  
-            aux5 = self.cube[5][2].copy()  
-            aux4 = self.cube[4][2].copy()  
+        front = self.__get_bits(self.cube[0], 18, 26)
+        right = self.__get_bits(self.cube[4], 18, 26)
+        back = self.__get_bits(self.cube[5], 18, 26)
+        left = self.__get_bits(self.cube[3], 18, 26)
 
-            self.cube[1][2] = aux0  
-            self.cube[5][2] = aux1  
-            self.cube[4][2] = aux5  
-            self.cube[0][2] = aux4
-        self.rotate_clockwise(3)
-        "---------------------------------------------------------------------------------------"
+        self.cube[0] = self.__set_bits(self.cube[0], left, 18, 26)
+        self.cube[4] = self.__set_bits(self.cube[4], front, 18, 26)
+        self.cube[5] = self.__set_bits(self.cube[5], right, 18, 26)
+        self.cube[3] = self.__set_bits(self.cube[3], back, 18, 26)
 
     # Gira la columna izquierda en sentido horario
     def move_yleft(self, n_moves):
-        for _ in range(n_moves):
-            # Guardar los valores de las posiciones que se moverán en la columna derecha
-            aux0 = [self.cube[0][y][0] for y in range(3)] 
-            aux2 = [self.cube[2][y][0] for y in range(3)] 
-            aux5 = [self.cube[5][y][0] for y in range(3)] 
-            aux3 = [self.cube[3][y][0] for y in range(3)] 
-
-            # Mover las posiciones en la columna derecha según el orden 0 - 2 - 5 - 3
-            for y in range(3):
-                self.cube[2][y][0] = aux0[y]  # de la cara 0 a la cara 2
-                self.cube[5][y][0] = aux2[y]  # de la cara 2 a la cara 5
-                self.cube[3][y][0] = aux5[y]  # de la cara 5 a la cara 3
-                self.cube[0][y][0] = aux3[y]  # de la cara 3 a la cara 0
-            self.rotate_clockwise(4)
-
-    def move_ymiddle(self, n_moves):
-        self.move_yleft(n_moves)
-        self.move_yright(n_moves)
+        # se llama al get_gits para cada parámetro del front , top ... y luego al set_bit de los del front al del top como corresponden, se calcula el y_left y se le mandas un delta + 6 para la derecha
+        pass
 
     def move_yright(self, n_moves):
-        for _ in range(n_moves):
-            aux0 = [self.cube[0][y][2] for y in range(3)]  
-            aux2 = [self.cube[2][y][2] for y in range(3)]  
-            aux5 = [self.cube[5][y][2] for y in range(3)] 
-            aux3 = [self.cube[3][y][2] for y in range(3)] 
+        pass
 
-            # Mover las posiciones en la columna derecha según el orden 0 - 2 - 5 - 3
-            for y in range(3):
-                self.cube[2][y][2] = aux0[y]  # de la cara 0 a la cara 2
-                self.cube[5][y][2] = aux2[y]  # de la cara 2 a la cara 5
-                self.cube[3][y][2] = aux5[y]  # de la cara 5 a la cara 3
-                self.cube[0][y][2] = aux3[y]  # de la cara 3 a la cara 0
-            self.rotate_clockwise(1)
-        "---------------------------------------------------------------------------------------"
-    # Gira la cara frontal en sentido horario
-    def move_zfront(self, n_moves): # AP
-        
-        for _ in range(n_moves):
-            # Guardar los valores de las posiciones que se moverán en la columna derecha
-            aux0 = [self.cube[2][z][0] for z in range(3)] 
-            aux2 = [self.cube[1][z][0] for z in range(3)] 
-            aux5 = [self.cube[3][z][0] for z in range(3)] 
-            aux3 = [self.cube[4][z][0] for z in range(3)] 
 
-            # Mover las posiciones en la columna derecha según el orden 0 - 2 - 5 - 3
-            for z in range(3):
-                self.cube[1][z][0] = aux0[z]  # de la cara 2 a la cara 2
-                self.cube[3][z][0] = aux2[z]  # de la cara 2 a la cara 5
-                self.cube[4][z][0] = aux5[z]  # de la cara 5 a la cara 3
-                self.cube[2][z][0] = aux3[z]  
-            self.rotate_clockwise(0)
-            
-    def move_zmiddle(self, n_moves):
-        self.move_zback(n_moves)
-        self.move_zfront(n_moves)
+        # Gira la cara trasera en sentido horario
+    def move_zfront(self, n_moves):
+        pass
 
     # Gira la cara trasera en sentido horario
-    def move_zback(self, n_moves): # C
-        for _ in range(n_moves):
-            aux0 = [self.cube[2][z][2] for z in range(3)] 
-            aux2 = [self.cube[1][z][2] for z in range(3)] 
-            aux5 = [self.cube[3][z][2] for z in range(3)] 
-            aux3 = [self.cube[4][z][2] for z in range(3)] 
+    def move_zback(self, n_moves):
+        pass
 
-            for z in range(3):
-                self.cube[1][z][2] = aux0[z]  
-                self.cube[3][z][2] = aux2[z]  
-                self.cube[4][z][2] = aux5[z] 
-                self.cube[2][z][2] = aux3[z]  
-            self.rotate_clockwise(5)
+
+
 
     def __move_cube(self, move):
         if move == 0:
@@ -164,7 +135,8 @@ class RubikCube:
         elif move == 3:
             self.move_yleft(1)
         elif move == 4:
-            self.move_ymiddle(1)
+            self.__move_cube(3)
+            self.__move_cube(14)
         elif move == 5:
             self.move_yright(1)
         elif move == 6:
@@ -172,7 +144,8 @@ class RubikCube:
         elif move == 7:
             self.move_zfront(1)
         elif move == 8:
-            self.move_zmiddle(1)
+            self.__move_cube(16)
+            self.__move_cube(6)
         elif move == 9:
             self.move_xup(3)
         elif move == 10:
@@ -182,7 +155,8 @@ class RubikCube:
         elif move == 12:
             self.move_yleft(3)
         elif move == 13:
-            self.move_ymiddle(3)
+            self.__move_cube(12)
+            self.__move_cube(5)
         elif move == 14:
             self.move_yright(3)
         elif move == 15:
@@ -190,7 +164,9 @@ class RubikCube:
         elif move == 16:
             self.move_zfront(3)
         elif move == 17:
-            self.move_zmiddle(3)
+            self.__move_cube(7)
+            self.__move_cube(15)
+            
 
     def shuffle(self, n_moves, make_moves=[]):
         if len(make_moves) > 0:
@@ -323,7 +299,8 @@ class RubikSolver(RubikCube):
         elif move == 3:
             super().move_yleft(1)
         elif move == 4:
-            super().move_ymiddle(1)
+            self.apply_move(3)
+            self.apply_move(14)
         elif move == 5:
             super().move_yright(1)
         elif move == 6:
@@ -331,7 +308,8 @@ class RubikSolver(RubikCube):
         elif move == 7:
             super().move_zfront(1)
         elif move == 8:
-            super().move_zmiddle(1)
+            self.apply_move(16)
+            self.apply_move(6)
         elif move == 9:
             super().move_xup(3)
         elif move == 10:
@@ -341,7 +319,8 @@ class RubikSolver(RubikCube):
         elif move == 12:
             super().move_yleft(3)
         elif move == 13:
-            super().move_ymiddle(3)
+            self.apply_move(12)
+            self.apply_move(5)
         elif move == 14:
             super().move_yright(3)
         elif move == 15:
@@ -349,7 +328,8 @@ class RubikSolver(RubikCube):
         elif move == 16:
             super().move_zfront(3)
         elif move == 17:
-            super().move_zmiddle(3)
+            self.apply_move(7)
+            self.apply_move(15)
 
     # 54 arreglo de 6 bits para optimizar
     def encode(self, cube):
@@ -379,10 +359,8 @@ class RubikSolver(RubikCube):
                             encoded_state.append(aux)
                             aux = [] 
                         '''
-            encoded_state_str = ''.join(encoded_state)
-            result = int(encoded_state_str, 2)
-
-            return result
+            return encoded_state
+    
 
     #------------------------------------------------------------ BFS (Breadth-First-Search)--------------------------------------------------------# 
     def breadth_first_search(self, initial_state, solved_state):
@@ -423,7 +401,7 @@ class RubikSolver(RubikCube):
                 return len(current_node.path), current_node.path
             visited.add(encoded_state)
 
-            for move in range(18):  
+            for move in range(18):  # Hay 18 movimientos posibles en un cubo de Rubik
                 new_state = copy.deepcopy(current_node.state)
                 new_state.apply_move(move)
                 encoded_new_state = tuple(map(tuple, self.encode(new_state.cube)))
@@ -464,28 +442,40 @@ class RubikSolver(RubikCube):
                     pq.put((new_node.heuristic_value + new_node.distance, new_node))
 
         return None
- #-----------------------------NUEVO----------------------------------------------------------------
     
-    def iterative_deepening_depth_first_search(self, max_depth, solved_state):
-        for depth in range(1, max_depth + 1):
-            result = self.depth_limited_search(depth, solved_state, [])
-            if result is not None:
-                return result
-        return None
+    def iterative_deepening_depth_first_search(self, max_depth, solved_state, heuristic):
+            for depth in range(1, max_depth + 1):
+                result = self.depth_limited_search(depth, solved_state, [], heuristic)
+                if result is not None:
+                    print("cantidad de movimientos:", len(result))
+                    return result
+            return None
 
-    def depth_limited_search(self, depth_limit, solved_state, path):
+    def depth_limited_search(self, depth_limit, solved_state, path, heuristic):
         if depth_limit == 0:
             return None
         if self.cube == solved_state.cube:  
             return path
+        moves = list(range(18))
+        moves.sort(key=lambda move: heuristic(Node(self), Node(solved_state)))
         for move in range(18):
             new_cube = copy.deepcopy(self)  
             new_cube.apply_move(move)
-            result = new_cube.depth_limited_search(depth_limit - 1, solved_state, path + [move])
+            result = new_cube.depth_limited_search(depth_limit - 1, solved_state, path + [move], heuristic)
             if result is not None:
                 return result
         return None
-    
+
+
+
+
+cubo = RubikCube()
+
+cubo.shuffle(None, [7])
+#cubo.display_cube()
+cubo.print_cube()
+
+
 # ----------------------------CASO RPUEBA----------------------------------------#
     
 print("\n*******Movimientos que puedes hacer*******\n")
@@ -512,10 +502,8 @@ print("14) Mover columna derecha hacia abajo")
 print("15) Mover cara trasera en contrasentido a las manecillas del reloj")
 print("16) Mover cara frontal en contrasentido de las manecillas del reloj")
 print("17) Mover cara intermedia en sentido de las manecillas del reloj")
-
-
-cubo=RubikSolver()
 print("Cubo original:")
+'''
 cubo.print_cube()
 print("---------------------------------------------------------")
 print("\nCubo revuelto al azar:")
@@ -527,33 +515,48 @@ movimientos_manual = [5]
 cubo.shuffle( 1, movimientos_manual)
 cubo.print_cube()
 print("---------------------------------------------------------")
-
+'''
 cubo = RubikSolver()
+'''
 cubo_resuelto = RubikSolver()  # Se inicializa un nuevo cubo resuelto
-shuffled_state = cubo.shuffle(1)  # Se obtiene el estado del cubo revuelto después del shuffle
+shuffled_state = cubo.shuffle(None, [4])  # Se obtiene el estado del cubo revuelto después del shuffle
 print("\nCubo a resolver revuelto al azar:")
 cubo.print_cube()
 
-'''print("----------breadhtfs-----------------")
+print("----------breadhtfs-----------------")
 print("Cantidad de movimientos y lista de movimientos para resolver el cubo:")
 movimientos_necesarios, movimientos = cubo.breadth_first_search(shuffled_state, cubo_resuelto)
 print("Cantidad de movimientos necesarios:", movimientos_necesarios)
 print("Lista de movimientos:", movimientos)
-cubo.print_cube()'''
-
+cubo.print_cube()
+'''
 '''print("----------bestfs-----------------")
 solved_state = RubikSolver()  
-initial_state = cubo.shuffle(4)  # Se obtiene el estado del cubo revuelto después del shuffle
+
+initial_state = cubo.shuffle(None, [8, 10])  # Se obtiene el estado del cubo revuelto después del shuffle
 cubo.print_cube()
 movimientos_necesarios, movimientos = cubo.best_first_search(initial_state, solved_state, Heuristica.bfs)
 print("Cantidad de movimientos necesarios:", movimientos_necesarios)
 print("Lista de movimientos:", movimientos)'''
 
-print("----------A*-----------------")
-'''solved_state = RubikSolver()  
-movimientos_manual = [5, 11]
-initial_state = cubo.shuffle(1, movimientos_manual)  # Se obtiene el estado del cubo revuelto después del shuffle
+'''print("----------A*-----------------")
+solved_state = RubikSolver()  
+movimientos_manual = [0, 8, 10, 11]
+initial_state = cubo.shuffle(None, movimientos_manual)  # Se obtiene el estado del cubo revuelto después del shuffle
 cubo.print_cube()
-movimientos_necesarios, movimientos = cubo.a_star(initial_state, solved_state, Heuristica.bfs)
+movimientos_necesarios, movimientos = cubo.a_star(initial_state, solved_state, Heuristica.color_centro)
 print("Cantidad de movimientos necesarios:", movimientos_necesarios)
 print("Lista de movimientos:", movimientos)'''
+
+
+'''print("----------Iterative-deepening-----------------")
+rubik = RubikSolver()
+goal_state = RubikSolver()  # Estado objetivo resuelto
+
+# Mezclar el cubo de Rubik
+
+rubik.shuffle(None, [7, 4, 9, 14])
+rubik.print_cube()
+# Resolver el cubo de Rubik
+solution = rubik.iterative_deepening_depth_first_search(8, goal_state, Heuristica.heuristic0)
+print("Solución encontrada:",solution)'''
