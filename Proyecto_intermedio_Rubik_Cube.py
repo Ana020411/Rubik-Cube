@@ -14,64 +14,50 @@ class RubikCube:
         # 3 - Cara izquierda - NARANJA
         # 5 - Cara trasera - AMARILLO
 
-        self.cube = [0,0,0,0,0,0]
+        self.cube = [0, 0, 0, 0, 0, 0]
+        # 000-blanco/ 001-azul / 010-verde / 011-naranja / 100-rojo / 101-amarillo
 
-        # 000 - white
-        # 001 - blue
-        # 010 - green
-        # 011 - orange
-        # 100 - red
-        # 101 - yellow
-        
-        self.colors = [0,1,2,3,4,5]
+        self.colors = [0, 1, 2, 3, 4, 5]
 
-        self.rotation = [[(18, 20), (9, 11), (0,2)],
+        self.rotation = [[(18, 20), (9, 11), (0, 2)],
                          [(21, 23), (12, 14), (3, 5)],
                          [(24, 26), (15, 17), (6, 8)]]
-        
-        #Inicializa el cubo
+
+        # Inicializa el cubo
         for i in range(len(self.cube)):
             self.cube[i] = self.colors[i]
             for _ in range(8):
-                self.cube[i] = (self.cube[i]<<3) | self.colors[i]
-        
-    # "Y" HACIA ARRIBA
-    # 0 - 2 - 5 - 3
+                self.cube[i] = (self.cube[i] << 3) | self.colors[i]
 
-    # "X" HACIA ARRIBA
-    # 0 - 1 - 5 - 4
-
-    # "Z" HACIA ARRIBA
-    # 2 - 1 - 3 - 4
+    # "Y" HACIA ARRIBA ||  "X" HACIA ARRIBA  || "Z" HACIA ARRIBA
+    # 0 - 2 - 5 - 3    ||   0 - 1 - 5 - 4    ||   2 - 1 - 3 - 4
 
     def rotate(self, n):
-        for i in range(2, 0):
-            for j in range(2, 0):
-                mask = (mask << 3) | self.__get_bits(n, self.rotation[i][j][0], self.rotation[i][j][1]) # n = la cara que se quiere rotar
-
-        #antihorario - arriba a abajo, izquierda derecha
-        #horario - derecha a izquierda, abajo a arriba
-        
+        mask = 0
+        for i in range(2, -1, -1):
+            for j in range(2, -1, -1):
+                mask = (mask << 3) | self.__get_bits(self.cube[n], self.rotation[i][j][0], self.rotation[i][j][1])
+        # antihorario - arriba a abajo, izquierda derecha
+        # horario - derecha a izquierda, abajo a arriba
         return mask
 
-    def __get_bits(self, n, lb, gb): # El número y el rango 
+    def __get_bits(self, n, lb, gb):
         if lb > gb or gb < lb:
             return 0
-        
-        mask = ( (2 ** (gb + 1) - 1) >> lb) << lb 
 
-        return (n & mask) >> lb # Se regresa el número en bits
-    
+        mask = ((2 ** (gb + 1) - 1) >> lb) << lb
 
-    def __set_bits(self, n, bits, lb, gb, max_bits = 26): # En el número donde le voy a meter los bits de donde a donde y el máximo de bits
-        mask1 = self.__get_bits(n, gb +1, max_bits) # Antes de donde van los bits
-        mask2 = bits # Los bits que se ponen el lugar donde se ponen
-        mask3 = self.__get_bits(n, 0, lb - 1) # Los bits desde el lb hasta 0
-        num = ((mask1 << (gb - lb + 1) | mask2) << lb) | mask3 # | (or) mete los bits, se van corriendo los bits para que quepan
+        return (n & mask) >> lb  # Se regresa el número en bits
+
+    def __set_bits(self, n, bits, lb, gb, max_bits=26):
+        mask1 = self.__get_bits(n, gb + 1, max_bits)  # Antes de donde van los bits
+        mask2 = bits  # Los bits que se ponen el lugar donde se ponen
+        mask3 = self.__get_bits(n, 0, lb - 1)  # Los bits desde el lb hasta 0
+        num = ((mask1 << (gb - lb + 1) | mask2) << lb) | mask3  # | (or) mete los bits, se van corriendo los bits para que quepan
 
         return num
-    
 
+    # ----------------------------Movimientos en x--------------------------------------
     def move_xup(self, n_moves):
         front = self.__get_bits(self.cube[0], 0, 8)
         right = self.__get_bits(self.cube[4], 0, 8)
@@ -82,8 +68,10 @@ class RubikCube:
         self.cube[4] = self.__set_bits(self.cube[4], front, 0, 8)
         self.cube[5] = self.__set_bits(self.cube[5], right, 0, 8)
         self.cube[3] = self.__set_bits(self.cube[3], back, 0, 8)
-    
-    def move_xmiddle(self, n_moves):#C
+
+        self.rotate(1)
+
+    def move_xbottom(self, n_moves):
         front = self.__get_bits(self.cube[0], 18, 26)
         right = self.__get_bits(self.cube[4], 18, 26)
         back = self.__get_bits(self.cube[5], 18, 26)
@@ -93,79 +81,156 @@ class RubikCube:
         self.cube[4] = self.__set_bits(self.cube[4], front, 18, 26)
         self.cube[5] = self.__set_bits(self.cube[5], right, 18, 26)
         self.cube[3] = self.__set_bits(self.cube[3], back, 18, 26)
-        
-    def move_xbottom(self, n_moves):#AP
-        front = self.__get_bits(self.cube[0], 18, 26)
-        right = self.__get_bits(self.cube[4], 18, 26)
-        back = self.__get_bits(self.cube[5], 18, 26)
-        left = self.__get_bits(self.cube[3], 18, 26)
 
-        self.cube[0] = self.__set_bits(self.cube[0], left, 18, 26)
-        self.cube[4] = self.__set_bits(self.cube[4], front, 18, 26)
-        self.cube[5] = self.__set_bits(self.cube[5], right, 18, 26)
-        self.cube[3] = self.__set_bits(self.cube[3], back, 18, 26)
+        self.rotate(2)
 
-    # Gira la columna izquierda en sentido horario
-    def move_yleft(self, n_moves):
-        # se llama al get_gits para cada parámetro del front , top ... y luego al set_bit de los del front al del top como corresponden, se calcula el y_left y se le mandas un delta + 6 para la derecha
-        pass
+    # ------------------------------------Movimientos en y-------------------------------
+    def move_yleft(self, n):
+        for _ in range(n):
+            front = []
+            up = []
+            back = []
+            bottom = []
 
-    def move_yright(self, n_moves):
-        pass
+            # Obtener los bits de cada cara
+            front.append(self.__get_bits(self.cube[0], 0, 2))
+            front.append(self.__get_bits(self.cube[0], 9, 11))
+            front.append(self.__get_bits(self.cube[0], 18, 20))
 
+            up.append(self.__get_bits(self.cube[1], 0, 2))
+            up.append(self.__get_bits(self.cube[1], 9, 11))
+            up.append(self.__get_bits(self.cube[1], 18, 20))
 
-        # Gira la cara trasera en sentido horario
-    def move_zfront(self, n_moves):
-        pass
+            back.append(self.__get_bits(self.cube[5], 6, 8))
+            back.append(self.__get_bits(self.cube[5], 15, 17))
+            back.append(self.__get_bits(self.cube[5], 24, 26))
 
-    # Gira la cara trasera en sentido horario
-    def move_zback(self, n_moves):
-        pass
+            bottom.append(self.__get_bits(self.cube[2], 0, 2))
+            bottom.append(self.__get_bits(self.cube[2], 9, 11))
+            bottom.append(self.__get_bits(self.cube[2], 18, 20))
 
+            # Establecer los bits en las nuevas caras
+            self.cube[0] = self.__set_bits(self.cube[0], bottom, 0, 2)
+            self.cube[1] = self.__set_bits(self.cube[1], front, 0, 2)
+            self.cube[5] = self.__set_bits(self.cube[5], up, 6, 8)
+            self.cube[2] = self.__set_bits(self.cube[2], back, 0, 2)
+            # Rotar la cara izquierda
+            self.rotate(3)
 
+    def move_yright(self, n):
+        for _ in range(n):
+            front = []
+            up = []
+            back = []
+            bottom = []
 
+            # Obtener los bits de cada cara
+            front.append(self.__get_bits(self.cube[0], 6, 8))
+            front.append(self.__get_bits(self.cube[0], 15, 17))
+            front.append(self.__get_bits(self.cube[0], 24, 26))
 
+            up.append(self.__get_bits(self.cube[1], 6, 8))
+            up.append(self.__get_bits(self.cube[1], 15, 17))
+            up.append(self.__get_bits(self.cube[1], 24, 26))
+
+            back.append(self.__get_bits(self.cube[5], 0, 2))
+            back.append(self.__get_bits(self.cube[5], 9, 11))
+            back.append(self.__get_bits(self.cube[5], 18, 20))
+
+            bottom.append(self.__get_bits(self.cube[2], 6, 8))
+            bottom.append(self.__get_bits(self.cube[2], 15, 17))
+            bottom.append(self.__get_bits(self.cube[2], 24, 26))
+
+            # Establecer los bits en las nuevas caras
+            self.cube[0] = self.__set_bits(self.cube[0], bottom, 6, 8)
+            self.cube[1] = self.__set_bits(self.cube[1], front, 6, 8)
+            self.cube[5] = self.__set_bits(self.cube[5], up, 0, 2)
+            self.cube[2] = self.__set_bits(self.cube[2], back, 6, 8)
+
+            # Rotar la cara derecha
+            self.rotate(4)
+
+    # ----------------------------------Movimientos en z--------------------------------------------
+    def __move_z(self, n, linea_vertical, linea_horizontal, shift):
+        delta_ver = -18 * shift
+        delta_hor = 6 * shift
+
+        for _ in range(n):
+            up_bits = []
+            right_bits = []
+            bottom_bits = []
+            left_bits = []
+
+            for i in range(len(linea_vertical)):
+                up_bits.append(self.__get_bits(self.cube[1], linea_vertical[i][0], linea_vertical[i][1]))
+                right_bits.append(self.__get_bits(self.cube[4], linea_horizontal[i][0], linea_horizontal[i][1]))
+                bottom_bits.append(self.__get_bits(self.cube[2], linea_vertical[i][0] + delta_ver, linea_vertical[i][1] + delta_ver))
+                left_bits.append(self.__get_bits(self.cube[3], linea_horizontal[i][0] + delta_hor, linea_horizontal[i][1] + delta_hor))
+
+            for i in range(len(linea_horizontal)):
+                self.cube[1] = self.__set_bits(self.cube[1], left_bits[-(i + 1)], linea_vertical[i][0], linea_vertical[i][1])
+                self.cube[4] = self.__set_bits(self.cube[4], up_bits[i], linea_horizontal[i][0], linea_horizontal[i][1])
+                self.cube[2] = self.__set_bits(self.cube[2], right_bits[i], linea_vertical[-(i + 1)][0] + delta_ver, linea_vertical[-(i + 1)][1] + delta_ver)
+                self.cube[3] = self.__set_bits(self.cube[3], bottom_bits[i], linea_horizontal[i][0] + delta_hor, linea_horizontal[i][1] + delta_hor)
+
+    def move_z_front(self, n):
+        # linea vertical              #linea horizontal
+        self.__move_z(n, [(18, 20), (21, 23), (24, 26)], [(0, 2), (9, 11), (18, 20)], 1)
+        self.rotate(0)
+
+    def move_z_back(self, n):
+        self.__move_z(n, [(0, 2), (3, 5), (6, 8)], [(6, 8), (15, 17), (24, 26)], -1)
+        self.rotate(5)
+
+    # ---------------------------------------mov----------------------------------------------------
     def __move_cube(self, move):
-        if move == 0:
+        if move == 0:  # x arriba
             self.move_xup(1)
-        elif move == 1:
+        elif move == 1:  # x abajo
             self.move_xbottom(1)
-        elif move == 2:
-            self.move_xmiddle(1)
-        elif move == 3:
+        elif move == 2:  # x en medio
+            self.move_xup(1)
+            self.move_xbottom(1)
+
+        elif move == 3:  # y izquierda
             self.move_yleft(1)
-        elif move == 4:
-            self.__move_cube(3)
-            self.__move_cube(14)
-        elif move == 5:
+        elif move == 4:  # y derecha
             self.move_yright(1)
-        elif move == 6:
-            self.move_zback(1)
-        elif move == 7:
-            self.move_zfront(1)
-        elif move == 8:
-            self.__move_cube(16)
-            self.__move_cube(6)
-        elif move == 9:
+        elif move == 5:  # y en medio
+            self.move_yleft(1)
+            self.move_yright(1)
+
+        elif move == 6:  # z frontal
+            self.move_z_front(1)
+        elif move == 7:  # z trasera
+            self.move_z_back(1)
+        elif move == 8:  # z medio
+            self.move_z_back(1)
+            self.move_z_front(1)
+
+        if move == 9:  # x arriba
             self.move_xup(3)
-        elif move == 10:
+        elif move == 10:  # x abajo
             self.move_xbottom(3)
-        elif move == 11:
-            self.move_xmiddle(3)
-        elif move == 12:
+        elif move == 11:  # x en medio
+            self.move_xup(3)
+            self.move_xbottom(3)
+
+        elif move == 12:  # y izquierda
             self.move_yleft(3)
-        elif move == 13:
-            self.__move_cube(12)
-            self.__move_cube(5)
-        elif move == 14:
+        elif move == 13:  # y derecha
             self.move_yright(3)
-        elif move == 15:
-            self.move_zback(3)
-        elif move == 16:
-            self.move_zfront(3)
-        elif move == 17:
-            self.__move_cube(7)
-            self.__move_cube(15)
+        elif move == 14:  # y en medio
+            self.move_yleft(3)
+            self.move_yright(3)
+
+        elif move == 15:  # z frontal
+            self.move_z_front(3)
+        elif move == 16:  # z trasera
+            self.move_z_back(3)
+        elif move == 17:  # z medio
+            self.move_z_back(3)
+            self.move_z_front(3)
             
 
     def shuffle(self, n_moves, make_moves=[]):
@@ -179,7 +244,6 @@ class RubikCube:
                 self.__move_cube(move)
         return self
 
-   # PARALELOOOOOOOOOOOOOOO, METER HILO
 #----------------------------------------------------CLASE HEURISTICA---------------------------------------
 class Heuristica:
     @staticmethod
