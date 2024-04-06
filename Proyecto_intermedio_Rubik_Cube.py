@@ -386,32 +386,32 @@ class RubikSolver(RubikCube):
             return None
     
     #------------------------------------------------------------  BFS (Best-First-Search) --------------------------------------------------------# 
+    
     def best_first_search(self, initial_state, solved_state, heuristic):
         visited = set()
-        queue = deque()
+        queue = PriorityQueue()
         source = Node(initial_state, path=[])
-        target = Node(solved_state)
-        source.calculate_heuristic(target, heuristic)
-        queue.append(source)
-        while queue:
-            current_node = queue.popleft()
-            encoded_state = tuple(map(tuple, self.encode(current_node.state.cube)))
+        source.calculate_heuristic(Node(solved_state), heuristic)
+        queue.put(source)
 
+        while not queue.empty():
+            current_node = queue.get()
+            encoded_state = tuple(map(tuple, self.encode(current_node.state.cube)))
             if encoded_state == tuple(map(tuple, self.encode(solved_state.cube))):
                 return len(current_node.path), current_node.path
+
             visited.add(encoded_state)
 
-            for move in range(18):  # Hay 18 movimientos posibles en un cubo de Rubik
+            for move in range(18):
                 new_state = copy.deepcopy(current_node.state)
                 new_state.apply_move(move)
                 encoded_new_state = tuple(map(tuple, self.encode(new_state.cube)))
                 if encoded_new_state not in visited:
                     new_node = Node(new_state, path=current_node.path + [move])
-                    new_node.calculate_heuristic(target, heuristic)
-                    queue.append(new_node)
+                    new_node.calculate_heuristic(Node(solved_state), heuristic)
+                    queue.put(new_node)
 
         return None
-
 
     #------------------------------------------------------------  A* --------------------------------------------------------# 
     def a_star(self, initial_state, solved_state, heuristic):
@@ -443,6 +443,8 @@ class RubikSolver(RubikCube):
 
         return None
     
+    
+    #---------------------------------Nueva con uso de heuristica------------------------------------------------------------------
     def iterative_deepening_depth_first_search(self, max_depth, solved_state, heuristic):
             for depth in range(1, max_depth + 1):
                 result = self.depth_limited_search(depth, solved_state, [], heuristic)
