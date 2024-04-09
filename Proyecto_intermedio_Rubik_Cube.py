@@ -285,6 +285,7 @@ class RubikCube:
         return self
 
 #----------------------------------------------------CLASE HEURISTICA---------------------------------------
+#----------------------------------------------------CLASE HEURISTICA---------------------------------------
 class Heuristica:
     @staticmethod
     def bfs(node_a, node_b):
@@ -340,6 +341,53 @@ class Heuristica:
                 distancia += 1
 
         return distancia
+    
+    def esquinas_y_aristas(node_a, node_b):
+        cube_uno = node_a.state.cube
+        cube_dos = node_b.state.cube
+        misplaced_corners = 0
+        misplaced_edges = 0
+
+        # Contar las esquinas mal ubicadas
+        for face in range(6):
+            for corner in [(0, 0, 0), (0, 0, 2), (0, 2, 0), (0, 2, 2), 
+                        (2, 0, 0), (2, 0, 2), (2, 2, 0), (2, 2, 2)]:
+                x, y, z = corner
+                if ((cube_uno[face] >> ((2 - x) * 9 + (2 - y) * 3 + (2 - z))) & 7) != ((cube_dos[face] >> ((2 - x) * 9 + (2 - y) * 3 + (2 - z))) & 7):
+                    misplaced_corners += 1
+
+        # Contar las aristas mal ubicadas
+        for face in range(6):
+            for edge in [(0, 0, 1), (0, 1, 0), (0, 1, 2), (0, 2, 1),
+                        (1, 0, 0), (1, 0, 2), (1, 2, 0), (1, 2, 2),
+                        (2, 0, 1), (2, 1, 0), (2, 1, 2), (2, 2, 1)]:
+                x, y, z = edge
+                if ((cube_uno[face] >> ((2 - x) * 9 + (2 - y) * 3 + (2 - z))) & 7) != ((cube_dos[face] >> ((2 - x) * 9 + (2 - y) * 3 + (2 - z))) & 7):
+                    misplaced_edges += 1
+
+        return misplaced_corners + misplaced_edges
+    
+    @staticmethod
+    def cfop(node_a, node_b):
+        cube_one = node_a.state.cube
+        cube_two = node_b.state.cube
+        misplaced_crosses = 0
+        
+        # Evaluar la capa cruzada en la cara superior
+        for i in range(3):
+            if ((cube_one[1] >> (9 + i * 3)) & 7) != 1:  # Color azul en la cara superior
+                misplaced_crosses += 1
+            if ((cube_two[1] >> (9 + i * 3)) & 7) != 1:  # Color azul en la cara superior
+                misplaced_crosses += 1
+        
+        # Evaluar la capa cruzada en la cara inferior
+        for i in range(3):
+            if ((cube_one[2] >> (9 + i * 3)) & 7) != 1:  # Color verde en la cara inferior
+                misplaced_crosses += 1
+            if ((cube_two[2] >> (9 + i * 3)) & 7) != 1:  # Color verde en la cara inferior
+                misplaced_crosses += 1
+        
+        return misplaced_crosses
     
 
     
@@ -606,12 +654,14 @@ cubo.shuffle( 1, movimientos_manual)
 cubo.print_cube()
 print("---------------------------------------------------------")
 '''
+'''
 cubo = RubikSolver()
 
 cubo_resuelto = RubikSolver()  # Se inicializa un nuevo cubo resuelto
 shuffled_state = cubo.shuffle(None, [0,4])  # Se obtiene el estado del cubo revuelto después del shuffle
 print("\nCubo a resolver revuelto:")
 cubo.print_cube()
+'''
 
 
 '''print("----------breadhtfs-----------------")
