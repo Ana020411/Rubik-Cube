@@ -1,9 +1,7 @@
 import random
-from collections import deque
 from queue import Queue
 import copy
 from queue import PriorityQueue
-import numpy as np
 
 class RubikCube:
     def __init__(self):
@@ -78,7 +76,7 @@ class RubikCube:
             self.cube[5] = self.__set_bits(self.cube[5], right, 0, 8)
             self.cube[3] = self.__set_bits(self.cube[3], back, 0, 8)
 
-            self.rotate_antihorario(self.cube[1])
+            self.cube[1]=self.rotate_antihorario(self.cube[1])
 
     def move_xbottom(self, n_moves):
         for _ in range(n_moves):
@@ -92,7 +90,7 @@ class RubikCube:
             self.cube[5] = self.__set_bits(self.cube[5], right, 18, 26)
             self.cube[3] = self.__set_bits(self.cube[3], back, 18, 26)
 
-            self.rotate_horario(self.cube[2])
+            self.cube[2]=self.rotate_horario(self.cube[2])
 
     # ------------------------------------Movimientos en y-------------------------------
     def move_yleft(self, n):
@@ -136,7 +134,7 @@ class RubikCube:
             self.cube[2] = self.__set_bits(self.cube[2], back[1], 9, 11)
             self.cube[2] = self.__set_bits(self.cube[2], back[2], 18, 20)
             # Rotar la cara izquierda
-            self.rotate_antihorario(self.cube[3])
+            self.cube[3]=self.rotate_antihorario(self.cube[3])
 
     def move_yright(self, n):
         for _ in range(n):
@@ -180,7 +178,7 @@ class RubikCube:
             self.cube[2] = self.__set_bits(self.cube[2], back[2], 24, 26)
 
             # Rotar la cara derecha
-            self.rotate_horario(self.cube[4])
+            self.cube[4]=self.rotate_horario(self.cube[4])
 
     # ----------------------------------Movimientos en z--------------------------------------------
     def __move_z(self, n, linea_vertical, linea_horizontal, shift):
@@ -208,11 +206,11 @@ class RubikCube:
     def move_zfront(self, n):
         # linea vertical              #linea horizontal
         self.__move_z(n, [(18, 20), (21, 23), (24, 26)], [(0, 2), (9, 11), (18, 20)], 1)
-        self.rotate_horario(self.cube[0])
+        self.cube[0]=self.rotate_horario(self.cube[0])
 
     def move_zback(self, n):
         self.__move_z(n, [(0, 2), (3, 5), (6, 8)], [(6, 8), (15, 17), (24, 26)], -1)
-        self.rotate_antihorario(self.cube[5])
+        self.cube[5]=self.rotate_antihorario(self.cube[5])
 
     # ---------------------------------------mov----------------------------------------------------
     def __move_cube(self, move):
@@ -264,7 +262,7 @@ class RubikCube:
         mask = (2 ** 3) - 1
         for i in range(len(self.cube)):
             aux = self.cube[i]
-            print('face', i , '------------')
+            print('FACE', i , '------------')
             for j in range(3):
                 for k in range(3):
                     print(aux & mask, end=' ')
@@ -292,19 +290,21 @@ class Heuristica:
         distancia = 0
 
         for face in range(6):
-            for row in range(3):
-                for col in range(3):
-                    valor_cubouno = cubo_uno[face][row][col]
+            for i in range(3):
+                for j in range(3):
+                    valor_cubouno = (cubo_uno[face] >> ((2 - i) * 9 + (2 - j) * 3)) & 7
                     face_target, row_target, col_target = -1, -1, -1
                     for c in range(6):
                         for f in range(3):
                             for col in range(3):
-                                if cubo_dos[c][f][col] == valor_cubouno:
+                                if ((cubo_dos[c] >> ((2 - f) * 9 + (2 - col) * 3)) & 7) == valor_cubouno:
                                     face_target, row_target, col_target = c, f, col
                                     break
                         if face_target != -1:
                             break
-                    distancia += abs(face - face_target) + abs(row - row_target) + abs(col - col_target)#CHECAAAAAAAR SI ACUMULAMOS LAS DISTANCIAS O NO*****
+                    distancia += abs(face - face_target) + abs(i - row_target) + abs(j - col_target)
+
+        return distancia
 
         return distancia
     
@@ -318,29 +318,26 @@ class Heuristica:
         cube_dos = node_b.state.cube
         misplaced_edges = 0
 
-        # Va checando las esquinas que no están bien
-        edges = [(0, 1), (1, 0), (1, 2), (2, 1)]
         for face in range(6):
-            for edge in edges:
+            for edge in [(0, 0), (0, 2), (2, 0), (2, 2)]:
                 row, col = edge
-                if cube_uno[face][row][col] != cube_dos[face][row][col]:
+                if ((cube_uno[face] >> ((2 - row) * 9 + (2 - col) * 3)) & 7) != ((cube_dos[face] >> ((2 - row) * 9 + (2 - col) * 3)) & 7):
                     misplaced_edges += 1
 
         return misplaced_edges
             
     @staticmethod
     def color_centro(node_a, node_b):
-        state = node_a.state.cube
-        target_state = node_b.state.cube
+        cube_uno = node_a.state.cube
+        cube_dos = node_b.state.cube
         distancia = 0
 
         for face in range(6):
-            color_centro = state[face][1][1]  
-            target_color_centro = target_state[face][1][1] 
-            if color_centro != target_color_centro:
+            if ((cube_uno[face] >> 12) & 7) != ((cube_dos[face] >> 12) & 7):
                 distancia += 1
 
         return distancia
+    
 
     
 #-----------------------------------------------------CLASE NODO---------------------------------------
@@ -368,7 +365,6 @@ class Node:
         if not isinstance(other, Node):
             return False
         return self.heuristic_value > other.heuristic_value
-    
 #-----------------------------------------------------CLASE NODO A*---------------------------------------
     
 class NodeAStar(Node):
@@ -436,59 +432,48 @@ class RubikSolver(RubikCube):
             self.apply_move(15)
             self.apply_move(16)
 
-    # 54 arreglo de 6 bits para optimizar
-    def encode(self, cube):
-        # Representación binaria de cada color: blanco-rojo-azul-verde-naranja-amarillo
-        # 100000 - 010000 - 001000 - 000100 - 000010 - 000001
-            encoded_state = []
-            aux = [] 
-            count = 0
-            for face in cube:
-                for row in face:
-                    for elem in row:
-                        if elem == 0:  # Blanco
-                            encoded_state.append([1, 0, 0, 0, 0, 0])
-                        elif elem == 1:  # Rojo
-                            encoded_state.append([0, 1, 0, 0, 0, 0])
-                        elif elem == 2:  # Azul
-                            encoded_state.append([0, 0, 1, 0, 0, 0])
-                        elif elem == 3:  # Verde
-                            encoded_state.append([0, 0, 0, 1, 0, 0])
-                        elif elem == 4:  # Naranja
-                            encoded_state.append([0, 0, 0, 0, 1, 0])
-                        else:  # Amarillo
-                            encoded_state.append([0, 0, 0, 0, 0, 1])
-                        '''
-                        count += 1
-                        if count % 9 == 0:  
-                            encoded_state.append(aux)
-                            aux = [] 
-                        '''
-            return encoded_state
-    
-
-    #------------------------------------------------------------ BFS (Breadth-First-Search)--------------------------------------------------------# 
+    #------------------------------------------------------------ BFS (Breadth-First-Search)--------------------------------------------------------#
+    '''
     def breadth_first_search(self, initial_state, solved_state):
-            visited = set()
-            queue = [(initial_state, [])]
+        visited = set()
+        queue = [(initial_state, [])]
 
-            while queue:
-                state, path = queue.pop(0)
-                if self.encode(state.cube) == self.encode(solved_state.cube):
-                    return len(path), path
+        while queue:
+            state, path = queue.pop(0)
+            if state.cube == solved_state.cube:
+                return len(path), path
 
-                encoded_state = self.encode(state.cube)
-                visited.add(tuple(map(tuple, encoded_state)))
+            visited.add(tuple(state.cube))
 
-                for move in range(18):
-                    new_state = copy.deepcopy(state)
-                    new_state.apply_move(move)
+            for move in range(18):
+                new_state = copy.deepcopy(state)
+                new_state.apply_move(move)
 
-                    encoded_new_state = self.encode(new_state.cube)
-                    if tuple(map(tuple, encoded_new_state)) not in visited:
-                        queue.append((new_state, path + [move]))
+                if tuple(new_state.cube) not in visited:
+                    queue.append((new_state, path + [move]))
 
-            return None
+        return None
+    '''
+    def breadth_first_search(self, initial_state, solved_state):
+        visited = set()
+        queue = Queue()
+        queue.put((initial_state, []))
+
+        while not queue.empty():
+            state, path = queue.get()
+            if state.cube == solved_state.cube:
+                return len(path), path
+
+            visited.add(tuple(state.cube))
+
+            for move in range(18):
+                new_state = copy.deepcopy(state)
+                new_state.apply_move(move)
+
+                if tuple(new_state.cube) not in visited:
+                    queue.put((new_state, path + [move]))
+
+        return None
     
     #------------------------------------------------------------  BFS (Best-First-Search) --------------------------------------------------------# 
     
@@ -501,17 +486,15 @@ class RubikSolver(RubikCube):
 
         while not queue.empty():
             current_node = queue.get()
-            encoded_state = tuple(map(tuple, self.encode(current_node.state.cube)))
-            if encoded_state == tuple(map(tuple, self.encode(solved_state.cube))):
+            if current_node.state.cube == solved_state.cube:
                 return len(current_node.path), current_node.path
 
-            visited.add(encoded_state)
+            visited.add(tuple(current_node.state.cube))
 
             for move in range(18):
                 new_state = copy.deepcopy(current_node.state)
                 new_state.apply_move(move)
-                encoded_new_state = tuple(map(tuple, self.encode(new_state.cube)))
-                if encoded_new_state not in visited:
+                if tuple(new_state.cube) not in visited:
                     new_node = Node(new_state, path=current_node.path + [move])
                     new_node.calculate_heuristic(Node(solved_state), heuristic)
                     queue.put(new_node)
@@ -529,27 +512,25 @@ class RubikSolver(RubikCube):
 
         while not pq.empty():
             _, current_node = pq.get()
-            encoded_state = tuple(map(tuple, self.encode(current_node.state.cube)))
-
-            if encoded_state == tuple(map(tuple, self.encode(solved_state.cube))):
+            if current_node.state.cube == solved_state.cube:
                 return len(current_node.path), current_node.path
 
-            visited.add(encoded_state)
+            visited.add(tuple(current_node.state.cube))
 
-            for move in range(18):  # Hay 18 movimientos posibles en un cubo de Rubik
+            for move in range(18):
                 new_state = copy.deepcopy(current_node.state)
                 new_state.apply_move(move)
-                encoded_new_state = tuple(map(tuple, self.encode(new_state.cube)))
-                if encoded_new_state not in visited:
+                if tuple(new_state.cube) not in visited:
                     new_node = NodeAStar(new_state, path=current_node.path + [move])
                     new_node.distance = current_node.distance + 1
                     new_node.calculate_heuristic(target, heuristic)
                     pq.put((new_node.heuristic_value + new_node.distance, new_node))
 
         return None
-    
+        
     
     #---------------------------------Nueva con uso de heuristica------------------------------------------------------------------
+    
     def iterative_deepening_depth_first_search(self, max_depth, solved_state, heuristic):
             for depth in range(1, max_depth + 1):
                 result = self.depth_limited_search(depth, solved_state, [], heuristic)
@@ -624,33 +605,34 @@ print("---------------------------------------------------------")
 '''
 cubo = RubikSolver()
 
-'''cubo_resuelto = RubikSolver()  # Se inicializa un nuevo cubo resuelto
-shuffled_state = cubo.shuffle(None, [4])  # Se obtiene el estado del cubo revuelto después del shuffle
+cubo_resuelto = RubikSolver()  # Se inicializa un nuevo cubo resuelto
+shuffled_state = cubo.shuffle(None, [4, 6,16])  # Se obtiene el estado del cubo revuelto después del shuffle
 print("\nCubo a resolver revuelto al azar:")
 cubo.print_cube()
 
-print("----------breadhtfs-----------------")
+'''print("----------breadhtfs-----------------")
 print("Cantidad de movimientos y lista de movimientos para resolver el cubo:")
 movimientos_necesarios, movimientos = cubo.breadth_first_search(shuffled_state, cubo_resuelto)
 print("Cantidad de movimientos necesarios:", movimientos_necesarios)
-print("Lista de movimientos:", movimientos)
-cubo.print_cube()'''
+print("Lista de movimientos:", movimientos)'''
 
+'''
 print("----------bestfs-----------------")
 solved_state = RubikSolver()  
 
-initial_state = cubo.shuffle(None, [8])  # Se obtiene el estado del cubo revuelto después del shuffle
+initial_state = cubo.shuffle(None, [9, 1])  # Se obtiene el estado del cubo revuelto después del shuffle
 cubo.print_cube()
 movimientos_necesarios, movimientos = cubo.best_first_search(initial_state, solved_state, Heuristica.bfs)
 print("Cantidad de movimientos necesarios:", movimientos_necesarios)
 print("Lista de movimientos:", movimientos)
+'''
 
 '''print("----------A*-----------------")
 solved_state = RubikSolver()  
-movimientos_manual = [0, 8, 10, 11]
+movimientos_manual = [0, 4, 8, 10, 3, 2]
 initial_state = cubo.shuffle(None, movimientos_manual)  # Se obtiene el estado del cubo revuelto después del shuffle
 cubo.print_cube()
-movimientos_necesarios, movimientos = cubo.a_star(initial_state, solved_state, Heuristica.color_centro)
+movimientos_necesarios, movimientos = cubo.a_star(initial_state, solved_state, Heuristica.bfs)
 print("Cantidad de movimientos necesarios:", movimientos_necesarios)
 print("Lista de movimientos:", movimientos)'''
 
@@ -661,8 +643,8 @@ goal_state = RubikSolver()  # Estado objetivo resuelto
 
 # Mezclar el cubo de Rubik
 
-rubik.shuffle(None, [7, 4, 9, 14])
+rubik.shuffle(None, [0, 4, 8])
 rubik.print_cube()
 # Resolver el cubo de Rubik
-solution = rubik.iterative_deepening_depth_first_search(8, goal_state, Heuristica.heuristic0)
+solution = rubik.iterative_deepening_depth_first_search(8, goal_state, Heuristica.bfs)
 print("Solución encontrada:",solution)'''
