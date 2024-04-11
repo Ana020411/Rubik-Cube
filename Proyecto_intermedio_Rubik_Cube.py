@@ -359,6 +359,15 @@ class Heuristica:
         
         return misplaced_crosses
     
+    def hamming_distance(node1, node2):
+        state1 = node1.state.cube
+        state2 = node2.state.cube
+        distance = 0
+        for i in range(len(state1)):
+            if state1[i] != state2[i]:
+                distance += 1
+        return distance
+
 #-----------------------------------------------------CLASE NODO---------------------------------------
 class Node:
     def __init__(self, state,  path=None):
@@ -548,6 +557,7 @@ class RubikSolver(RubikCube):
                 return result
         return None
     
+   
 
 # ----------------------------CASOS PRUEBA----------------------------------------#
 
@@ -597,35 +607,31 @@ movimientos_necesarios, movimientos = cubo.breadth_first_search(shuffled_state, 
 print("Cantidad de movimientos necesarios:", movimientos_necesarios)
 print("Lista de movimientos:", movimientos)
 '''
-
-'''print("----------bestfs-----------------")
-cubo = RubikSolver()
-solved_state = RubikSolver()  
-initial_state = cubo.shuffle(None, [0, 1 , 2, 4])  # Se obtiene el estado del cubo revuelto después del shuffle
-cubo.print_cube()
+'''
 inicio = time.time()
-movimientos_necesarios, movimientos = cubo.best_first_search(initial_state, solved_state, Heuristica.esquinas_y_aristas)
+movimientos_necesarios, movimientos = cubo.best_first_search(initial_state, solved_state, Heuristica.cfop)
 print("Cantidad de movimientos necesarios:", movimientos_necesarios)
 fin = time.time()
 print("Lista de movimientos:", movimientos)
 print("Tiempo transcurrido: ", fin - inicio,"segundos")'''
 
 
-'''
+
+
 print("----------A*-----------------")
 rubik = RubikSolver()  
 solved_state = RubikSolver()  
 
-initial_state = rubik.shuffle(4)  # Se obtiene el estado del cubo revuelto después del shuffle
+initial_state = rubik.shuffle(7)  # Se obtiene el estado del cubo revuelto después del shuffle
 rubik.print_cube()
 inicio = time.time()
-movimientos_necesarios, movimientos = rubik.a_star(initial_state, solved_state, Heuristica.esquinas_y_aristas)
+movimientos_necesarios, movimientos = rubik.a_star(initial_state, solved_state, Heuristica.hamming_distance)
 print("Cantidad de movimientos necesarios:", movimientos_necesarios)
 fin = time.time()
 print("Lista de movimientos:", movimientos)
 print("Tiempo transcurrido: ", fin - inicio,"segundos")
 
-
+'''
 #print("----------Iterative-deepening-----------------")
 rubik = RubikSolver()
 goal_state = RubikSolver()  # Estado objetivo resuelto
