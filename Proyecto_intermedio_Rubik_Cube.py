@@ -3,6 +3,10 @@ from queue import Queue
 import copy
 from queue import PriorityQueue
 import time
+
+
+# ---------------------------------------------- REPRESENTACIÓN CUBO -----------------------------------------------
+
 class RubikCube:
     def __init__(self):
         # 0 - Cara Frente - BLANCO
@@ -17,6 +21,7 @@ class RubikCube:
 
         self.colors = [0, 1, 2, 3, 4, 5]
 
+        #Matriz de rotación
         self.rotation = [[(18, 20), (9, 11), (0, 2)],
                          [(21, 23), (12, 14), (3, 5)],
                          [(24, 26), (15, 17), (6, 8)]]
@@ -27,8 +32,6 @@ class RubikCube:
             for _ in range(8):
                 self.cube[i] = (self.cube[i] << 3) | self.colors[i]
 
-    # "Y" HACIA ARRIBA ||  "X" HACIA ARRIBA  || "Z" HACIA ARRIBA
-    # 0 - 2 - 5 - 3    ||   0 - 1 - 5 - 4    ||   2 - 1 - 3 - 4
 
     def rotate_antihorario(self, n):
         mask = 0
@@ -63,7 +66,8 @@ class RubikCube:
 
         return num
 
-    # ----------------------------Movimientos en x--------------------------------------
+    # --------------------------------- Movimientos en X  --------------------------------------
+
     def move_xup(self, n_moves):
         for _ in range(n_moves):
             front = self.__get_bits(self.cube[0], 0, 8)
@@ -92,7 +96,7 @@ class RubikCube:
 
             self.cube[2]=self.rotate_horario(self.cube[2])
 
-    # ------------------------------------Movimientos en y-------------------------------
+    # ------------------------------------------- Movimientos en Y -------------------------------
     def move_yleft(self, n):
         for _ in range(n):
             front = []
@@ -180,7 +184,7 @@ class RubikCube:
             # Rotar la cara derecha
             self.cube[4]=self.rotate_horario(self.cube[4])
 
-    # ----------------------------------Movimientos en z--------------------------------------------
+    # ------------------------------------------ Movimientos en Z --------------------------------------------
     def __move_z(self, n, linea_vertical, linea_horizontal, shift):
         delta_ver = -18 * shift
         delta_hor = 6 * shift
@@ -213,7 +217,8 @@ class RubikCube:
         self.__move_z(n, [(0, 2), (3, 5), (6, 8)], [(6, 8), (15, 17), (24, 26)], -1)
         self.cube[5]=self.rotate_antihorario(self.cube[5])
 
-    # ---------------------------------------mov----------------------------------------------------
+
+    # ------------------------------------------------ LISTA DE MOVIMIENTOS ----------------------------------------------------
     def __move_cube(self, move):
         if move == 0:  # x arriba
             self.move_xup(1)
@@ -241,7 +246,8 @@ class RubikCube:
         elif move == 11:  # z trasera
             self.move_zback(3)
             #self.cube[5]=self.rotate_antihorario(self.cube[5])
-
+    
+    # ------------------------------------------    IMPRESIÓN DEL CUBO ----------------------------
     def print_cube(self):
         mask = (2 ** 3) - 1
         faces = []
@@ -264,6 +270,9 @@ class RubikCube:
         print()
 
             
+
+    # ------------------------------------------  SHUFFLE ---------------------------------------------
+
     def shuffle(self, n_moves, make_moves=[]):
         if len(make_moves) > 0:
             for move in make_moves:
@@ -279,6 +288,7 @@ class RubikCube:
 
 class Heuristica:
     @staticmethod
+    #manhattan
     def bfs(node_a, node_b):
         cubo_uno = node_a.state.cube
         cubo_dos = node_b.state.cube
@@ -301,7 +311,7 @@ class Heuristica:
 
         return distancia
 
-    
+    @staticmethod
     def esquinas_y_aristas(node_a, node_b):
         cube_uno = node_a.state.cube
         cube_dos = node_b.state.cube
@@ -374,6 +384,7 @@ class Node:
         if not isinstance(other, Node):
             return False
         return self.heuristic_value > other.heuristic_value
+    
 #-----------------------------------------------------CLASE NODO A*---------------------------------------
     
 class NodeAStar(Node):
@@ -390,6 +401,7 @@ class NodeAStar(Node):
         if not isinstance(other, NodeAStar):
             return False
         return (self.distance + self.heuristic_value) > (other.distance + other.heuristic_value)
+    
     
 # -------------------------------------------- CLASE SOLVER -------------------------------------------------------#                  
 class RubikSolver(RubikCube):
@@ -437,13 +449,14 @@ class RubikSolver(RubikCube):
 
             visited.add(tuple(state.cube))
 
+            
             for move in range(12):
-                # Poda: no aplicar el mismo movimiento dos veces seguidas
-                if path and path[-1] == move:
+                ''' 
+                if path and path[-1] == move: # Condición por si se repite el mismo movimiento dos veces
                     continue
-                # Poda: no aplicar un movimiento y luego su inverso
                 if path and path[-1] == (move + 6) % 12:
                     continue
+                '''
 
                 new_state = copy.deepcopy(state)
                 new_state.apply_move(move)
@@ -509,7 +522,7 @@ class RubikSolver(RubikCube):
         return None
         
     
-    #--------------------------------------------------------Nueva con uso de heuristica------------------------------------------------------------------
+    #-------------------------------------------------------- ITERATIVE DEEPENING FIRST SEARCH ------------------------------------------------------------------
     
     def iterative_deepening_depth_first_search(self, max_depth, solved_state, heuristic):
             for depth in range(1, max_depth + 1):
@@ -536,7 +549,9 @@ class RubikSolver(RubikCube):
         return None
     
 
-# ----------------------------CASOs PRUEBA----------------------------------------#
+# ----------------------------CASOS PRUEBA----------------------------------------#
+
+
 '''    
 print("\n*******Movimientos que puedes hacer*******\n")
 print("0) Mover fila superior a la derecha")
@@ -570,8 +585,9 @@ cubo.shuffle( 1, movimientos_manual)
 cubo.print_cube()
 print("---------------------------------------------------------")
 '''
-
-'''print("----------breadhtfs-----------------")
+'''
+print("----------breadhtfs-----------------")
+cubo = RubikSolver()
 cubo_resuelto = RubikSolver()  # Se inicializa un nuevo cubo resuelto
 shuffled_state = cubo.shuffle(3)  # Se obtiene el estado del cubo revuelto después del shuffle
 print("\nCubo a resolver revuelto:")
@@ -579,24 +595,22 @@ cubo.print_cube()
 print("Cantidad de movimientos y lista de movimientos para resolver el cubo:")
 movimientos_necesarios, movimientos = cubo.breadth_first_search(shuffled_state, cubo_resuelto)
 print("Cantidad de movimientos necesarios:", movimientos_necesarios)
-print("Lista de movimientos:", movimientos)'''
+print("Lista de movimientos:", movimientos)
+'''
 
-
-print("----------bestfs-----------------")
+'''print("----------bestfs-----------------")
 cubo = RubikSolver()
 solved_state = RubikSolver()  
-initial_state = cubo.shuffle(None, [4,3])  # Se obtiene el estado del cubo revuelto después del shuffle
+initial_state = cubo.shuffle(None, [0, 1 , 2, 4])  # Se obtiene el estado del cubo revuelto después del shuffle
 cubo.print_cube()
-'''
 inicio = time.time()
 movimientos_necesarios, movimientos = cubo.best_first_search(initial_state, solved_state, Heuristica.esquinas_y_aristas)
 print("Cantidad de movimientos necesarios:", movimientos_necesarios)
 fin = time.time()
 print("Lista de movimientos:", movimientos)
-print("Tiempo transcurrido: ", fin - inicio,"segundos")
+print("Tiempo transcurrido: ", fin - inicio,"segundos")'''
 
 
-'''
 '''
 print("----------A*-----------------")
 rubik = RubikSolver()  
