@@ -352,9 +352,9 @@ class Heuristica:
         
         # Evaluar la capa cruzada en la cara inferior
         for i in range(3):
-            if ((cube_one[2] >> (9 + i * 3)) & 7) != 1:  # Color verde en la cara inferior
+            if ((cube_one[2] >> (9 + i * 3)) & 7) != 2:  # Color verde en la cara inferior
                 misplaced_crosses += 1
-            if ((cube_two[2] >> (9 + i * 3)) & 7) != 1:  # Color verde en la cara inferior
+            if ((cube_two[2] >> (9 + i * 3)) & 7) != 2:  # Color verde en la cara inferior
                 misplaced_crosses += 1
         
         return misplaced_crosses
@@ -608,28 +608,34 @@ print("Cantidad de movimientos necesarios:", movimientos_necesarios)
 print("Lista de movimientos:", movimientos)
 '''
 '''
+print("----------best-first-search-----------------")
+cubo = RubikSolver()
+initial_state = cubo.shuffle(4)
+print("\nCubo a resolver revuelto:")
+cubo.print_cube()
+solved_state = RubikSolver()
 inicio = time.time()
 movimientos_necesarios, movimientos = cubo.best_first_search(initial_state, solved_state, Heuristica.cfop)
 print("Cantidad de movimientos necesarios:", movimientos_necesarios)
 fin = time.time()
 print("Lista de movimientos:", movimientos)
-print("Tiempo transcurrido: ", fin - inicio,"segundos")'''
+print("Tiempo transcurrido: ", fin - inicio,"segundos")
+'''
 
 
 
-
-print("----------A*-----------------")
+'''print("----------A*-----------------")
 rubik = RubikSolver()  
 solved_state = RubikSolver()  
 
 initial_state = rubik.shuffle(7)  # Se obtiene el estado del cubo revuelto después del shuffle
 rubik.print_cube()
 inicio = time.time()
-movimientos_necesarios, movimientos = rubik.a_star(initial_state, solved_state, Heuristica.hamming_distance)
+movimientos_necesarios, movimientos = rubik.a_star(initial_state, solved_state, Heuristica.cfop)
 print("Cantidad de movimientos necesarios:", movimientos_necesarios)
 fin = time.time()
 print("Lista de movimientos:", movimientos)
-print("Tiempo transcurrido: ", fin - inicio,"segundos")
+print("Tiempo transcurrido: ", fin - inicio,"segundos")'''
 
 '''
 #print("----------Iterative-deepening-----------------")
